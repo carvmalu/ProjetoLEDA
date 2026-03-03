@@ -6,7 +6,7 @@ module Data.Vector.Simple (
   -- * Vetores (imutáveis para comparação)
   Vector,
   
-  -- * Operações básicas (como ArrayList)
+  -- * Operações básicas -como ArrayList
   -- ** Criação
   empty,
   singleton,
@@ -20,12 +20,19 @@ module Data.Vector.Simple (
   head,
   last,
   
-  -- ** Modificação (cria novos vetores)
+  -- ** cria novos vetores
   cons,  -- adicionar no início
   snoc,  -- adicionar no final
   (++),  -- concatenação
   take,
   drop,
+  
+  -- ** remoção de vetores
+  removeAt,    -- remover elemento em índice específico
+  removeFirst, -- remover primeira ocorrência de um valor
+  removeAll,   -- remover todas as ocorrências de um valor
+  tail,        -- remover primeiro elemento
+  init,        -- remover último elemento
   
   -- ** Transformação
   map,
@@ -83,6 +90,40 @@ head v = v ! 0
 last :: Vector a -> a
 last v = v ! (length v - 1)
 
+-- | Remover primeiro elemento (cria novo vetor)
+tail :: Vector a -> Vector a
+tail v
+  | null v   = error "tail: vetor vazio"
+  | otherwise = fromList (L.tail (toList v))
+
+-- | Remover último elemento (cria novo vetor)
+init :: Vector a -> Vector a
+init v
+  | null v   = error "init: vetor vazio"
+  | otherwise = fromList (L.init (toList v))
+
+-- | Remover elemento em índice específico (cria novo vetor)
+-- Exemplo: removeAt 2 <1,2,3,4,5> = <1,2,4,5>
+removeAt :: Int -> Vector a -> Vector a
+removeAt i v
+  | i < 0 || i >= length v = error "removeAt: índice fora dos limites"
+  | otherwise = fromList (L.take i (toList v) ++ L.drop (i+1) (toList v))
+
+-- | Remover primeira ocorrência de um valor (cria novo vetor)
+-- Exemplo: removeFirst 3 <1,3,2,3,4> = <1,2,3,4>
+removeFirst :: Eq a => a -> Vector a -> Vector a
+removeFirst x v = fromList $ go (toList v)
+  where
+    go [] = []
+    go (y:ys)
+      | x == y    = ys
+      | otherwise = y : go ys
+
+-- | Remover todas as ocorrências de um valor (cria novo vetor)
+-- Exemplo: removeAll 3 <1,3,2,3,4> = <1,2,4>
+removeAll :: Eq a => a -> Vector a -> Vector a
+removeAll x v = filter (/= x) v
+
 -- | Adicionar elemento no início (cria novo vetor)
 cons :: a -> Vector a -> Vector a
 cons x v = fromList (x : toList v)
@@ -120,7 +161,7 @@ toList (V off len arr) = go 0
                          (# x #) -> x : go (i+1)
 
 -- Funções auxiliares para arrays primitivos
-foreign import primitive "ghc-prim_emArray#"
+foreign import primitive "ghc-prim_emptyArray#"
   emptyArray# :: Array a
 
 foreign import primitive "ghc-prim_newArray#"
