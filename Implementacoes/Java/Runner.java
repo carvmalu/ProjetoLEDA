@@ -26,6 +26,8 @@ public class Runner {
 
 
     //Métodos auxiliares para o treinamento (cada um retorna o tempo).
+    
+    //Inserção.
     public double measureAdd(ArrayListF list, int[] data) {
         long start = System.nanoTime();
         for (int i = 0; i < data.length; i++) 
@@ -33,6 +35,7 @@ public class Runner {
         return (System.nanoTime() - start) / 1_000_000.0;
     }
 
+  
     public double measureAddNative(ArrayList<Integer> list, int[] data) {
         long start = System.nanoTime();
         for (int i = 0; i < data.length; i++) 
@@ -40,6 +43,7 @@ public class Runner {
         return (System.nanoTime() - start) / 1_000_000.0;
     }
 
+  //Search.
     public double measureSearch(ArrayListF list, int target) {
         long start = System.nanoTime();
         list.search(target);
@@ -53,17 +57,72 @@ public class Runner {
         return (System.nanoTime() - start) / 1_000_000.0;
     }
 
+    //Remoção.
     public double measureRemove(ArrayListF list, int n) {
         long start = System.nanoTime();
         for (int i = 0; i < n; i++) 
           list.remove(0);
         return (System.nanoTime() - start) / 1_000_000.0;
-    }
+}
+      
 
     public double measureRemoveNative(ArrayList<Integer> list, int n) {
         long start = System.nanoTime();
         for (int i = 0; i < n; i++) 
           list.remove(0);
         return (System.nanoTime() - start) / 1_000_000.0;
+    }
+
+    //Métodos auxiliares para medir consumo de memória.
+    
+    //Inserção. 
+    public double measureAddMemory(ArrayListF list, int[] data){
+        long beforeUsedMem = Runtime.getRuntime().totalMemory() -Runtime.getRuntime().freeMemory();
+        for (int i = 0; i < data.length; i++) 
+            list.add(0, data[i]);       
+        long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        return (afterUsedMem - beforeUsedMem);
+    }
+    
+    public double measureAddNativeMemory(ArrayList<Integer> list, int[] data){
+        long beforeUsedMem = Runtime.getRuntime().totalMemory() -Runtime.getRuntime().freeMemory();
+        for (int i = 0; i < data.length; i++) 
+            list.add(0, data[i]);
+        long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        return (afterUsedMem - beforeUsedMem);
+    }
+
+    //Search.
+     public double measureSearchMemory(ArrayListF list, int target) {
+        long beforeUsedMem = Runtime.getRuntime().totalMemory() -Runtime.getRuntime().freeMemory();
+        list.search(target);
+        long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        return (afterUsedMem - beforeUsedMem);
+    }
+
+
+    public double measureSearchNativeMemory(ArrayList<Integer> list, int target) {
+        long beforeUsedMem = Runtime.getRuntime().totalMemory() -Runtime.getRuntime().freeMemory();
+        list.contains(target); 
+        long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        return (afterUsedMem - beforeUsedMem);
+    }
+
+    //Remoção.
+    public double measureRemoveMemory(ArrayListF list, int n) {
+        long beforeUsedMem = Runtime.getRuntime().totalMemory() -Runtime.getRuntime().freeMemory();
+        for (int i = 0; i < n; i++) 
+          list.remove(0);
+        long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        return (afterUsedMem - beforeUsedMem);
+    }
+      
+
+    public double measureRemoveNativeMemory(ArrayList<Integer> list, int n) {
+        long beforeUsedMem = Runtime.getRuntime().totalMemory() -Runtime.getRuntime().freeMemory();
+        for (int i = 0; i < n; i++) 
+          list.remove(0);
+        long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        return (afterUsedMem - beforeUsedMem);
     }
 }

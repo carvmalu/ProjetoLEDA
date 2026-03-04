@@ -4,7 +4,7 @@ import java.io.*;
 //https://blog.formacao.dev/manipulacao-de-arquivos-csv-em-java-leitura-e-escrita/
 
 public class Main {
-    public static void main(String[] args) throws Exception {
+    public static void main(int[] sizes, String inputFile, String path) throws Exception {
         
         //Aqui seria os dados/formas padronizadas.
         String inputFile = "dados.txt";
@@ -28,23 +28,39 @@ public class Main {
                 // Inserção.
                 ArrayListF listF = new ArrayListF(10);
                 double tF = r.measureAdd(listF, currentData);
-                w.println("Java,ArrayListFor,AddInicio," + n + "," + tF);
-
-
-
+                w.println("Java,ArrayListFor,Insercao,Tempo," + n + "," + tF);
+        
                 ArrayList<Integer> listNative = new ArrayList<>();
                 double tNative = r.measureAddNative(listNative, currentData);
-                w.println("Java,ArrayListBuildIn,AddInicio," + n + "," + tNative);
+                w.println("Java,ArrayListBuildIn,Insercao,Tempo," + n + "," + tNative);
 
+
+                listF = new ArrayListF(10);
+                double tFM = r.measureAddMemory(listF, currentData);
+                w.println("Java,ArrayListFor,Insercao,Memoria,Tempo," + n + "," + tFM);
+
+                listNative = new ArrayList<>();
+                double tNativeM = r.measureAddNativeMemory(listNative, currentData);
+                w.println("Java,ArrayListBuildIn,Insercao,Memoria" + n + "," + tNativeM);
 
 
                 //Verificando busca.
                 double tFSearch = r.measureSearch(listF, currentData[0]);
-                w.println("Java,ArrayListFor,Search," + n + "," + tFSearch);
+                w.println("Java,ArrayListFor,Search,Tempo," + n + "," + tFSearch);
 
-              
                 double tNativeSearch =  r.measureSearchNative(listNative, currentData[0]);
-                w.println("Java,ArrayListBuildIn,Search," + n + "," + tNativeSearch);
+                w.println("Java,ArrayListBuildIn,Search,Tempo," + n + "," + tNativeSearch);
+
+                double tFSearchM = r.measureSearchMemory(listF, currentData[0]);
+                w.println("Java,ArrayListFor,Search,Memoria" + n + "," + tFSearchM);
+
+                double tNativeSearchM =  r.measureSearchNativeMemory(listNative, currentData[0]);
+                w.println("Java,ArrayListBuildIn,Search,Memoria" + n + "," + tNativeSearchM);
+
+
+                //Remoção.
+                
+
 
             }
         
