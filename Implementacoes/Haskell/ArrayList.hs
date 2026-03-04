@@ -1,3 +1,5 @@
+-- https://hackage.haskell.org/package/vector-0.13.1.0/docs/src/Data.Vector.html
+
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UnboxedTuples #-}
