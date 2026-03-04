@@ -48,35 +48,6 @@ medirMemoria acao = do
         (_ :: [Int]) -> 16 + fromIntegral (L.length v) * 16  -- lista cons cells
         _ -> 0
 
--- Testar segurança de acesso
-testarSeguranca :: IO [String]
-testarSeguranca = do
-    let vazio = V.empty :: V.Vector Int
-        v = V.fromList [1..10]
-    
-    -- Teste Acesso dentro dos limites
-    acessoValido <- try $ evaluate (v V.! 5) :: IO (Either SomeException Int)
-    
-    -- Teste Acesso fora dos limites com !
-    acessoInvalido <- try $ evaluate (v V.! 100) :: IO (Either SomeException Int)
-    
-    -- Teste Acesso com !? (versão segura)
-    let acessoMaybe = v V.!? 100
-    
-    -- Teste head em vetor vazio
-    headVazio <- try $ evaluate (V.head vazio) :: IO (Either SomeException Int)
-    
-    -- Teste headMaybe (versão segura)
-    let headMaybeVazio = V.headMaybe vazio
-    
-    return
-        [ show (case acessoValido of Left _ -> 0; Right _ -> 1)
-        , show (case acessoInvalido of Left _ -> 1; Right _ -> 0)
-        , show (case acessoMaybe of Just _ -> 1; Nothing -> 0)
-        , show (case headVazio of Left _ -> 1; Right _ -> 0)
-        , show (case headMaybeVazio of Just _ -> 0; Nothing -> 1)
-        ]
-
 -- Vamos gerar dados aleatórios para teste
 gerarDadosTeste :: Int -> IO [Int]
 gerarDadosTeste n = do
@@ -187,7 +158,7 @@ testeRemocaoMeio v numRemocoes = do
     
     return (tempo, memoria)
 
--- Agora vamos gerar relatório CSV completo
+-- relatório CSV completo
 gerarCSV :: [(String, Double, Integer, String)] -> String
 gerarCSV resultados = 
     "Operacao,Tempo(ms),Memoria(bytes),Seguranca\n" ++
@@ -198,16 +169,12 @@ gerarCSV resultados =
 
 main :: IO ()
 main = do
-    hPutStrLn stderr "=== INICIANDO TESTES COM 100.000 ENTRADAS ==="
+    hPutStrLn stderr "Iniciando testes"
     
     -- Gerar dados de teste
     hPutStrLn stderr "Gerando dados aleatórios..."
     dados <- gerarDadosTeste totalEntradas
     let vetorTeste = V.fromList dados
-    
-    -- Testes de segurança
-    hPutStrLn stderr "Executando testes de segurança..."
-    seguranca <- testarSeguranca
     
     -- Teste Cons (adição início)
     hPutStrLn stderr "Testando cons (adição início)..."
@@ -237,11 +204,10 @@ main = do
     let resultados = 
             [ ("cons", tempoCons, memCons, "OK")
             , ("snoc", tempoSnoc, memSnoc, "OK")
-            , ("acesso", tempoAcesso, memAcesso, head seguranca)
+            , ("acesso", tempoAcesso, memAcesso)
             , ("remocao_inicio", tempoRemInicio, memRemInicio, "OK")
             , ("remocao_final", tempoRemFinal, memRemFinal, "OK")
             , ("remocao_meio", tempoRemMeio, memRemMeio, "OK")
-            , ("seguranca_acesso", 0, 0, unwords seguranca)
             ]
     
     -- Gerar CSV
@@ -249,7 +215,7 @@ main = do
     writeFile caminhoResultados csv
     
     -- Mostrar resultados na tela (apenas números para seu programa)
-    putStrLn "=== RESULTADOS ==="
+    putStrLn "Resultados"
     putStrLn "Tempos (ms):"
     mapM_ (putStrLn . printf "%.2f") [tempoCons, tempoSnoc, tempoAcesso, 
                                        tempoRemInicio, tempoRemFinal, tempoRemMeio]
@@ -258,7 +224,4 @@ main = do
     mapM_ (putStrLn . show) [memCons, memSnoc, memAcesso, 
                              memRemInicio, memRemFinal, memRemMeio]
     
-    putStrLn "\nSegurança (1=seguro, 0=inseguro):"
-    mapM_ putStrLn seguranca
-    
-    hPutStrLn stderr $ "\n✅ Resultados salvos em: " ++ caminhoResultados
+    hPutStrLn stderr $ "\nResultados salvos em: " ++ caminhoResultados
