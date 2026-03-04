@@ -44,6 +44,16 @@ public void add (int element){
   this.size++; 
 }
 
+//Procura o elemento e retorna o índice, caso for encontrado.
+public int search(int element){
+
+  for(int i = 0; i < list.length; i++)
+      if(list[i] == element)
+          return i;
+    
+  return -1;
+  }
+
 
 public void add (int idx, int element){
   if(isValid(idx)){
@@ -72,4 +82,5 @@ public void remove(int idx){
     this.size--;
     }
   }
+  
 }

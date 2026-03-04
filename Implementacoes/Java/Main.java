@@ -1,51 +1,55 @@
 import java.util.*;
 import java.io.*;
+
 //https://blog.formacao.dev/manipulacao-de-arquivos-csv-em-java-leitura-e-escrita/
 
-// Testes Isolados com o pior caso.
 public class Main {
-    public static void main(String[] args) {
-        int totalElementos = 50000;
-
-        //Versão iterativa.
-        ArrayListF listaFor = new ArrayListF(10);
-        long startF = System.currentTimeMillis();
+    public static void main(String[] args) throws Exception {
         
-        for(int i = 0; i < totalElementos; i++) 
-            listaFor.add(0, i);
-        long endF = System.currentTimeMillis();
+        //Aqui seria os dados/formas padronizadas.
+        String inputFile = "dados.txt";
+        String outputFile = "JavaResults.csv";
+        String path = "../../Resultados/Java/"; ;
+        int[] sizes = {10000, 30000, 50000, 100000};
 
-        // Versão com método nativo de java (arraycopy).
-        ArrayListNM listaNM = new ArrayListNM(10);
-        long startNM = System.currentTimeMillis();
+     
+        Runner r = new Runner(inputFile, sizes[3]);
+        int[] data = r.getData();
 
-        for(int i = 0; i < totalElementos; i++) 
-            listaNM.add(0, i);
-        long endNM = System.currentTimeMillis();
+        try (PrintWriter w = new PrintWriter(new FileWriter(outputFile + path))) {
+            w.println("Language,Implementation,Operation,N,TimeMS");
 
-        // Versão build in do Java
-        ArrayList<Integer> listaJava = new ArrayList<>();
-        long startJ = System.currentTimeMillis();
+            for (int i = 0; i < sizes.length; i++) {
+                //
+                int n = sizes[i]; int[] currentData = new int[n];
+                for (int j = 0; j < n; j++)
+                    currentData[j] = data[j];
+              
+                // Inserção.
+                ArrayListF listF = new ArrayListF(10);
+                double tF = r.measureAdd(listF, currentData);
+                w.println("Java,ArrayListFor,AddInicio," + n + "," + tF);
 
-        for(int i = 0; i < totalElementos; i++) 
-            listaJava.add(0, i);
-       
-        long endJ = System.currentTimeMillis();
 
-        // Saída resultados.
-        System.out.println("Tempo com FOR: " + (endF - startF) + "ms");
-        System.out.println("Tempo com NM (arraycopy): " + (endNM - startNM) + "ms");
-        System.out.println("Tempo ArrayList Oficial: " + (endJ - startJ) + "ms");
 
-       try (PrintWriter w = new PrintWriter("../../Resultados/Java/resultados.csv")) {
-        w.println("Implementacao,TempoMS");
-        w.println("Iterativa For," + (endF - startF));
-        w.println("Nativa arraycopy," + (endNM - startNM));
-        w.println("Java Oficial," + (endJ - startJ));
-        System.out.println("Arquivo gerado em Resultados/Java!");
-    } catch (Exception e) { 
-        System.out.println("Erro: Verifique se a pasta existe."); 
-    }
+                ArrayList<Integer> listNative = new ArrayList<>();
+                double tNative = r.measureAddNative(listNative, currentData);
+                w.println("Java,ArrayListBuildIn,AddInicio," + n + "," + tNative);
+
+
+
+                //Verificando busca.
+                double tFSearch = r.measureSearch(listF, currentData[0]);
+                w.println("Java,ArrayListFor,Search," + n + "," + tFSearch);
+
+              
+                double tNativeSearch =  r.measureSearchNative(listNative, currentData[0]);
+                w.println("Java,ArrayListBuildIn,Search," + n + "," + tNativeSearch);
+
+            }
+        
+        } catch (Exception e) {
+            System.err.println("Erro " + e.getMessage());
+        }
     }
 }
-

@@ -10,7 +10,7 @@ public class ArrayListF {
   private int size;
 
 public ArrayListF(int capacity){
-  this.list = new int[capacity];
+  this.list = new int[Math.max(1, capacity)];
   this.size = 0;
 }
 
@@ -21,7 +21,6 @@ private boolean isFull(){
 
 // Dobra o tamanho da lista.
 private void resize(){
-
   int[] newList = new int[size * 2];
 
   for(int i = 0; i < list.length; i++)
@@ -50,6 +49,15 @@ public void add (int element){
   this.list[this.size] = element;
   this.size++; 
 }
+
+//Procura o elemento e retorna o índice, caso for encontrado.
+public int search(int element){
+
+  for(int i = 0; i < this.size; i++)
+      if(list[i] == element)
+          return i;
+    return -1;
+  }
 
 
 public void add (int idx, int element){
@@ -80,4 +88,13 @@ public void remove(int idx){
     this.size--;
     }
   }
+
+  public void remove(Integer element){
+    int idx = search(element);
+    if (isValid(idx) && idx < size) {
+      shiftLeft(idx);
+      this.size--;
+
+  }
+}
 }
