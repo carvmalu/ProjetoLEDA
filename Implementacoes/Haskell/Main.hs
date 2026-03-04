@@ -22,7 +22,7 @@ totalEntradas :: Int
 totalEntradas = 100000
 
 caminhoResultados :: String
-caminhoResultados = "../../Resultados/Haskell/resultados_100k.csv"
+caminhoResultados = "../../Resultados/Haskell/resultadosHaskell.csv"
 
 -- Medir tempo de execução (ms)
 medirTempo :: IO a -> IO Double
