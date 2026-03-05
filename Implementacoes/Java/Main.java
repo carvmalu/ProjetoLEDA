@@ -2,6 +2,7 @@ import java.util.*;
 import java.io.*;
 
 //https://blog.formacao.dev/manipulacao-de-arquivos-csv-em-java-leitura-e-escrita/
+// Comando na raiz do projeto: java -cp Implementacoes/Java Main input/entrada.txt Resultados/ 10000,30000,50000,100000
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -17,7 +18,7 @@ public class Main {
         int[] sizes = r.readString(args[2]);
 
         try (PrintWriter w = new PrintWriter(new FileWriter(path + "/" + outputFile))) {
-            w.println("Language,Implementation,Operation,N,TimeMS");
+            w.println("Language,Implementation,Operation,Metric,N,TimeMS/Bytes");
 
             for (int i = 0; i < sizes.length; i++) {
                 //
