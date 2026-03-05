@@ -19,6 +19,13 @@ private boolean isFull(){
   return (this.size == list.length);
 }
 
+
+//Retorna o tamanho.
+public int size(){
+  return this.size;
+}
+
+
 // Dobra o tamanho da lista.
 private void resize(){
   int[] newList = new int[size * 2];
@@ -33,6 +40,13 @@ private void resize(){
 // Verifica se o índice passado é válido.
 private boolean isValid(int idx){
   return idx >= 0 && idx <= this.size;
+}
+
+// Retorna o elemento pelo indice.
+public int get(int idx){
+  if(isValid(idx))
+    return this.list[idx];
+  return -1;
 }
 
 
