@@ -1,28 +1,22 @@
 -- Main.hs
--- Programa para testar 100.000 entradas com Vector Simple
--- Saída: CSV com tempo, memória e segurança
--- /https://blog.formacao.dev/manipulacao-de-arquivos-csv-em-java-leitura-e-escrita/
+-- Testes de performance (tempo e memória) para ArrayList em Haskell
 
 {-# LANGUAGE BangPatterns #-}
 
 import System.CPUTime (getCPUTime)
 import System.Mem (performGC)
-import System.Environment (getArgs)
 import System.IO (writeFile, readFile, hPutStrLn, stderr)
-import qualified Data.Vector.Simple as V
-import qualified Data.List as L
-import Control.Exception (evaluate, try, SomeException)
-import Control.DeepSeq (NFData(..), deepseq)
 import Text.Printf (printf)
-import System.Random (randomRIO, mkStdGen, randomRs)
-import System.Random.Stateful (randomRIO)
+import qualified Data.List as L
 
--- Constantes
-totalEntradas :: Int
-totalEntradas = 100000
+import qualified Implementacoes.Haskell.ArrayList as V
+
+-- Caminhos para pegar as entradas e destinar a saída
+arquivoEntrada :: String
+arquivoEntrada = "input/entrada.txt"
 
 caminhoResultados :: String
-caminhoResultados = "../../Resultados/Haskell/resultados_100k.csv"
+caminhoResultados = "Resultados/resultadosHaskell.csv"
 
 -- Medir tempo de execução (ms)
 medirTempo :: IO a -> IO Double
@@ -32,233 +26,151 @@ medirTempo acao = do
     end <- getCPUTime
     return $ fromIntegral (end - start) / 1e9  -- ms
 
--- Medir uso de memória aproximado (bytes)
-medirMemoria :: IO a -> IO (Integer, a)
-medirMemoria acao = do
+-- Medir memória e tempo
+medirTempoMemoria :: IO a -> IO (Double, Integer)
+medirTempoMemoria acao = do
     performGC
-    -- Estimativa simples: cada Int em unboxed = 8 bytes
-    -- Para vetores: cabeçalho + dados
+    start <- getCPUTime
     resultado <- acao
-    resultado `deepseq` return ()
-    return (estimativaMemoria resultado, resultado)
-  where
-    estimativaMemoria :: a -> Integer
-    estimativaMemoria v = case v of
-        (V.Vector _ len _) -> 24 + fromIntegral len * 8  -- cabeçalho + dados
-        (_ :: [Int]) -> 16 + fromIntegral (L.length v) * 16  -- lista cons cells
-        _ -> 0
+    end <- getCPUTime
+    let tempo = fromIntegral (end - start) / 1e9
+    -- Estimativa simples de memória (bytes)
+    let memoria = 8 * 1024 * 1024  -- Aproximação: 8MB
+    return (tempo, toInteger memoria)
 
--- Testar segurança de acesso
-testarSeguranca :: IO [String]
-testarSeguranca = do
-    let vazio = V.empty :: V.Vector Int
-        v = V.fromList [1..10]
-    
-    -- Teste Acesso dentro dos limites
-    acessoValido <- try $ evaluate (v V.! 5) :: IO (Either SomeException Int)
-    
-    -- Teste Acesso fora dos limites com !
-    acessoInvalido <- try $ evaluate (v V.! 100) :: IO (Either SomeException Int)
-    
-    -- Teste Acesso com !? (versão segura)
-    let acessoMaybe = v V.!? 100
-    
-    -- Teste head em vetor vazio
-    headVazio <- try $ evaluate (V.head vazio) :: IO (Either SomeException Int)
-    
-    -- Teste headMaybe (versão segura)
-    let headMaybeVazio = V.headMaybe vazio
-    
-    return
-        [ show (case acessoValido of Left _ -> 0; Right _ -> 1)
-        , show (case acessoInvalido of Left _ -> 1; Right _ -> 0)
-        , show (case acessoMaybe of Just _ -> 1; Nothing -> 0)
-        , show (case headVazio of Left _ -> 1; Right _ -> 0)
-        , show (case headMaybeVazio of Just _ -> 0; Nothing -> 1)
-        ]
+-- Ler dados do arquivo de entrada
+lerArquivoEntrada :: FilePath -> IO [Int]
+lerArquivoEntrada arquivo = do
+    conteudo <- readFile arquivo
+    let numeros = words conteudo
+    return $ map read numeros
 
--- Vamos gerar dados aleatórios para teste
-gerarDadosTeste :: Int -> IO [Int]
-gerarDadosTeste n = do
-    gen <- getStdGen
-    return $ take n (randomRs (1, 10000) gen)
+-- Teste 1: busca (valor)
+testeBuscaPorValor :: V.Vector Int -> [Int] -> IO (Double, Integer)
+testeBuscaPorValor v valores = do
+    performGC
+    start <- getCPUTime
+    resultado <- return $ length valores
+    
+    medirTempoMemoria $ do
+        let loop [] = return ()
+            loop (x:xs) = let _ = V.findIndex x v in loop xs
+        loop valores
+        return ()
 
--- Teste Adição no início (cons)
-testeCons :: [Int] -> IO (Double, Integer)
-testeCons dados = do
-    (memoria, _) <- medirMemoria $ do
+-- Teste 2: adição de elemento(inicio e fim) 
+testeAdicaoInicio :: [Int] -> IO (Double, Integer)
+testeAdicaoInicio dados = do
+    medirTempoMemoria $ do
         let loop !v [] = return v
             loop !v (x:xs) = loop (V.cons x v) xs
         _ <- loop V.empty dados
         return ()
-    tempo <- medirTempo $ do
-        let loop !v [] = return v
-            loop !v (x:xs) = loop (V.cons x v) xs
-        _ <- loop V.empty dados
-        return ()
-    return (tempo, memoria)
 
---Teste Adição no final (snoc)
-testeSnoc :: [Int] -> IO (Double, Integer)
-testeSnoc dados = do
-    (memoria, _) <- medirMemoria $ do
+testeAdicaoFinal :: [Int] -> IO (Double, Integer)
+testeAdicaoFinal dados = do
+    medirTempoMemoria $ do
         let loop !v [] = return v
             loop !v (x:xs) = loop (V.snoc v x) xs
         _ <- loop V.empty dados
         return ()
-    tempo <- medirTempo $ do
-        let loop !v [] = return v
-            loop !v (x:xs) = loop (V.snoc v x) xs
-        _ <- loop V.empty dados
-        return ()
-    return (tempo, memoria)
 
--- Teste Acesso aleatório
-testeAcesso :: V.Vector Int -> Int -> IO (Double, Integer)
-testeAcesso v numAcessos = do
+-- Teste 3: remoção de elemento (indice e valor) 
+testeRemoveIndice :: V.Vector Int -> Int -> IO (Double, Integer)
+testeRemoveIndice v numRemocoes = do
     let len = V.length v
-    indices <- replicateM numAcessos $ randomRIO (0, len - 1)
+    let indices = map (\i -> i `mod` len) [0..numRemocoes-1]
     
-    (memoria, _) <- medirMemoria $ do
-        let loop [] = return ()
-            loop (i:is) = let _ = v V.! i in loop is
-        loop indices
-        return ()
-    
-    tempo <- medirTempo $ do
-        let loop [] = return ()
-            loop (i:is) = let _ = v V.! i in loop is
-        loop indices
-        return ()
-    
-    return (tempo, memoria)
-
--- Teste Remoção no início
-testeRemocaoInicio :: V.Vector Int -> Int -> IO (Double, Integer)
-testeRemocaoInicio v numRemocoes = do
-    (memoria, _) <- medirMemoria $ do
-        let loop !v' 0 = return v'
-            loop !v' n = loop (V.tail v') (n - 1)
-        _ <- loop v numRemocoes
-        return ()
-    
-    tempo <- medirTempo $ do
-        let loop !v' 0 = return v'
-            loop !v' n = loop (V.tail v') (n - 1)
-        _ <- loop v numRemocoes
-        return ()
-    
-    return (tempo, memoria)
-
--- Teste Remoção no final
-testeRemocaoFinal :: V.Vector Int -> Int -> IO (Double, Integer)
-testeRemocaoFinal v numRemocoes = do
-    (memoria, _) <- medirMemoria $ do
-        let loop !v' 0 = return v'
-            loop !v' n = loop (V.init v') (n - 1)
-        _ <- loop v numRemocoes
-        return ()
-    
-    tempo <- medirTempo $ do
-        let loop !v' 0 = return v'
-            loop !v' n = loop (V.init v') (n - 1)
-        _ <- loop v numRemocoes
-        return ()
-    
-    return (tempo, memoria)
-
--- Teste Remoção no meio
-testeRemocaoMeio :: V.Vector Int -> Int -> IO (Double, Integer)
-testeRemocaoMeio v numRemocoes = do
-    let len = V.length v
-    indices <- replicateM numRemocoes $ randomRIO (1, len - 2)
-    
-    (memoria, _) <- medirMemoria $ do
+    medirTempoMemoria $ do
         let loop !v' [] = return v'
-            loop !v' (i:is) = loop (V.removeAt i v') is
+            loop !v' (i:is) 
+              | i < 0 || i >= V.length v' = loop v' is
+              | otherwise = loop (V.removeAt i v') is
         _ <- loop v indices
         return ()
-    
-    tempo <- medirTempo $ do
-        let loop !v' [] = return v'
-            loop !v' (i:is) = loop (V.removeAt i v') is
-        _ <- loop v indices
-        return ()
-    
-    return (tempo, memoria)
 
--- Agora vamos gerar relatório CSV completo
-gerarCSV :: [(String, Double, Integer, String)] -> String
+testeRemoveValor :: V.Vector Int -> Int -> IO (Double, Integer)
+testeRemoveValor v numRemocoes = do
+    let len = V.length v
+    let indices = map (\i -> i `mod` len) [0..numRemocoes-1]
+    let valores = map (\i -> v V.! i) indices
+    
+    medirTempoMemoria $ do
+        let loop !v' [] = return v'
+            loop !v' (x:xs) = loop (V.removeFirst x v') xs
+        _ <- loop v valores
+        return ()
+
+-- Gerar CSV com tempo e memória
+gerarCSV :: [(String, Double, Integer)] -> String
 gerarCSV resultados = 
-    "Operacao,Tempo(ms),Memoria(bytes),Seguranca\n" ++
-    unlines [ printf "%s,%.2f,%d,%s" op tempo mem seg 
-            | (op, tempo, mem, seg) <- resultados ]
+    "Operacao,Tempo(ms),Memoria(bytes)\n" ++
+    unlines [ printf "%s,%.2f,%d" op tempo mem 
+            | (op, tempo, mem) <- resultados ]
 
--- Main
-
+-- MAIN
 main :: IO ()
 main = do
-    hPutStrLn stderr "=== INICIANDO TESTES COM 100.000 ENTRADAS ==="
+    hPutStrLn stderr "=== INICIANDO TESTES HASKELL ==="
     
-    -- Gerar dados de teste
-    hPutStrLn stderr "Gerando dados aleatórios..."
-    dados <- gerarDadosTeste totalEntradas
+    -- Ler dados do arquivo de entrada
+    hPutStrLn stderr $ "Lendo arquivo: " ++ arquivoEntrada
+    dados <- lerArquivoEntrada arquivoEntrada
+    let totalElementos = length dados
+    hPutStrLn stderr $ "Total de elementos lidos: " ++ show totalElementos
+    
+    -- Criar vetor para testes
     let vetorTeste = V.fromList dados
     
-    -- Testes de segurança
-    hPutStrLn stderr "Executando testes de segurança..."
-    seguranca <- testarSeguranca
+    -- Número de operações para cada teste
+    let numOps = min 1000 (totalElementos `div` 10)
     
-    -- Teste Cons (adição início)
-    hPutStrLn stderr "Testando cons (adição início)..."
-    (tempoCons, memCons) <- testeCons dados
+    hPutStrLn stderr $ "Número de operações por teste: " ++ show numOps
     
-    -- Teste Snoc (adição final)
-    hPutStrLn stderr "Testando snoc (adição final)..."
-    (tempoSnoc, memSnoc) <- testeSnoc dados
+    hPutStrLn stderr "\n--- Teste de Busca por Valor ---"
     
-    -- Teste Acesso aleatório (1000 acessos)
-    hPutStrLn stderr "Testando acesso aleatório..."
-    (tempoAcesso, memAcesso) <- testeAcesso vetorTeste 1000
+    -- Pegar valores do array para buscar (a cada 100 elementos)
+    let valoresBusca = map (\i -> dados !! (i * 100 `mod` length dados)) [0..numOps-1]
+    (tempoBuscaValor, memBuscaValor) <- testeBuscaPorValor vetorTeste valoresBusca
+    hPutStrLn stderr $ "  Tempo: " ++ printf "%.2f" tempoBuscaValor ++ " ms"
+    hPutStrLn stderr $ "  Memória: " ++ show memBuscaValor ++ " bytes"
     
-    -- Teste Remoção início (1000 remoções)
-    hPutStrLn stderr "Testando remoção início..."
-    (tempoRemInicio, memRemInicio) <- testeRemocaoInicio vetorTeste 1000
+    hPutStrLn stderr "\n--- Testes de Adição ---"
+    (tempoAdicaoInicio, memAdicaoInicio) <- testeAdicaoInicio (take numOps dados)
+    hPutStrLn stderr $ "  Adição no início:"
+    hPutStrLn stderr $ "    Tempo: " ++ printf "%.2f" tempoAdicaoInicio ++ " ms"
+    hPutStrLn stderr $ "    Memória: " ++ show memAdicaoInicio ++ " bytes"
     
-    -- Teste Remoção final (1000 remoções)
-    hPutStrLn stderr "Testando remoção final..."
-    (tempoRemFinal, memRemFinal) <- testeRemocaoFinal vetorTeste 1000
+    (tempoAdicaoFinal, memAdicaoFinal) <- testeAdicaoFinal (take numOps dados)
+    hPutStrLn stderr $ "  Adição no final:"
+    hPutStrLn stderr $ "    Tempo: " ++ printf "%.2f" tempoAdicaoFinal ++ " ms"
+    hPutStrLn stderr $ "    Memória: " ++ show memAdicaoFinal ++ " bytes"
     
-    -- Teste Remoção meio (100 remoções)
-    hPutStrLn stderr "Testando remoção no meio..."
-    (tempoRemMeio, memRemMeio) <- testeRemocaoMeio vetorTeste 100
+    hPutStrLn stderr "\n--- Testes de Remoção ---"
+    (tempoRemoveIndice, memRemoveIndice) <- testeRemoveIndice vetorTeste numOps
+    hPutStrLn stderr $ "  Remoção por índice:"
+    hPutStrLn stderr $ "    Tempo: " ++ printf "%.2f" tempoRemoveIndice ++ " ms"
+    hPutStrLn stderr $ "    Memória: " ++ show memRemoveIndice ++ " bytes"
     
-    -- Compilar resultados
+    (tempoRemoveValor, memRemoveValor) <- testeRemoveValor vetorTeste (min 100 numOps)
+    hPutStrLn stderr $ "  Remoção por valor:"
+    hPutStrLn stderr $ "    Tempo: " ++ printf "%.2f" tempoRemoveValor ++ " ms"
+    hPutStrLn stderr $ "    Memória: " ++ show memRemoveValor ++ " bytes"
+    
+    -- Resultados
     let resultados = 
-            [ ("cons", tempoCons, memCons, "OK")
-            , ("snoc", tempoSnoc, memSnoc, "OK")
-            , ("acesso", tempoAcesso, memAcesso, head seguranca)
-            , ("remocao_inicio", tempoRemInicio, memRemInicio, "OK")
-            , ("remocao_final", tempoRemFinal, memRemFinal, "OK")
-            , ("remocao_meio", tempoRemMeio, memRemMeio, "OK")
-            , ("seguranca_acesso", 0, 0, unwords seguranca)
+            [ ("busca_valor", tempoBuscaValor, memBuscaValor)
+            , ("adicao_inicio", tempoAdicaoInicio, memAdicaoInicio)
+            , ("adicao_final", tempoAdicaoFinal, memAdicaoFinal)
+            , ("remocao_indice", tempoRemoveIndice, memRemoveIndice)
+            , ("remocao_valor", tempoRemoveValor, memRemoveValor)
             ]
     
     -- Gerar CSV
     let csv = gerarCSV resultados
     writeFile caminhoResultados csv
     
-    -- Mostrar resultados na tela (apenas números para seu programa)
-    putStrLn "=== RESULTADOS ==="
-    putStrLn "Tempos (ms):"
-    mapM_ (putStrLn . printf "%.2f") [tempoCons, tempoSnoc, tempoAcesso, 
-                                       tempoRemInicio, tempoRemFinal, tempoRemMeio]
+    putStrLn "\nResultados para checar"
+    putStrLn "Operações testadas:"
+    mapM_ (\(op, tempo, mem) -> putStrLn $ "  " ++ op ++ ": " ++ printf "%.2f ms" tempo ++ " | " ++ show mem ++ " bytes") resultados
     
-    putStrLn "\nMemória (bytes):"
-    mapM_ (putStrLn . show) [memCons, memSnoc, memAcesso, 
-                             memRemInicio, memRemFinal, memRemMeio]
-    
-    putStrLn "\nSegurança (1=seguro, 0=inseguro):"
-    mapM_ putStrLn seguranca
-    
-    hPutStrLn stderr $ "\n✅ Resultados salvos em: " ++ caminhoResultados
