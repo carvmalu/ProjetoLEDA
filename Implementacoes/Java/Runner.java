@@ -23,6 +23,16 @@ public class Runner {
         sc.close();
         return data;
     }
+    
+    // Lendo a String
+    public int[] readString(String entrada){
+        String[] parts = entrada.split(",");
+        int[] sizes = new int[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            sizes[i] = Integer.parseInt(parts[i].trim());
+        }
+        return sizes;
+    }
     //Metodo auxiliar para limpar memoria.
     private long getUsedMemory() {
         System.gc(); 
