@@ -18,7 +18,7 @@ arquivoEntrada = "input/entrada.txt"
 caminhoResultados :: String
 caminhoResultados = "Resultados/resultadosHaskell.csv"
 
--- Medir tempo de execução (ms)
+-- Medir tempo de execução (microsegundos)
 medirTempo :: IO a -> IO Double
 medirTempo acao = do
     start <- getCPUTime
@@ -159,11 +159,11 @@ main = do
     
     -- Resultados
     let resultados = 
-            [ ("busca_valor", tempoBuscaValor, memBuscaValor)
-            , ("adicao_inicio", tempoAdicaoInicio, memAdicaoInicio)
-            , ("adicao_final", tempoAdicaoFinal, memAdicaoFinal)
-            , ("remocao_indice", tempoRemoveIndice, memRemoveIndice)
-            , ("remocao_valor", tempoRemoveValor, memRemoveValor)
+            [ ("busca", tempoBuscaValor, memBuscaValor)
+            , ("adicaoInicio", tempoAdicaoInicio, memAdicaoInicio)
+            , ("adicaoFinal", tempoAdicaoFinal, memAdicaoFinal)
+            , ("remocaoIndice", tempoRemoveIndice, memRemoveIndice)
+            , ("remocaoValor", tempoRemoveValor, memRemoveValor)
             ]
     
     -- Gerar CSV
