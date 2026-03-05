@@ -7,10 +7,6 @@ import (
 	"testing"
 )
 
-var numeros []int
-var array DynamicArray
-var slice DynamicSlice
-
 func inicialização() {
 	
 	var temp int
@@ -33,37 +29,67 @@ func inicialização() {
 
 }
 
-func BenchmarkAddArray(b *testing.B) {
-	inicialização()
-
-	b.ReportAllocs()
-
-	for i := 0; i < b.N; i++ {
-		array = DynamicArray{Size: 0, Capacity: 0, Array: []int{}}
-
-		for _, num := range numeros{
-			array.Add(num)
-		}
-	}
-
-}
-
-func BenchmarkAddSlice(b *testing.B) {
+func BenchmarkAddA(b *testing.B) {
 	inicialização()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		slice := DynamicSlice{Slice: []int{}}
+		b.StopTimer()
+		tempArray := DynamicArray{Size: 0, Capacity: 0, Array: []int{}}
+		b.StartTimer()
 
-		for _, num := range numeros{
-			slice.Add(num)
+		for _, num := range numeros {
+			tempArray.Add(num)
 		}
 	}
 
 }
 
-func BenchmarkSearchArray(b *testing.B) {
+func BenchmarkAddS(b *testing.B) {
+	inicialização()
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer() // Para o cronômetro
+		tempSlice := DynamicSlice{Slice: []int{}}
+		b.StartTimer()
+
+		for _, num := range numeros {
+			tempSlice.Add(num)
+		}
+	}
+
+}
+
+func BenchmarkAddIndiceA(b *testing.B) {
+	inicialização()
+
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+
+		array.AddIndice(0, 824)
+
+		array.RemoveIndice(0)
+	}
+}
+
+func BenchmarkAddIndiceS(b *testing.B) {
+	inicialização()
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+
+		slice.AddIndice(0, 824)
+
+		slice.RemoveIndice(0)
+	}
+}
+
+func BenchmarkSearchA(b *testing.B) {
 	inicialização()
 
 	b.ResetTimer()
@@ -73,7 +99,7 @@ func BenchmarkSearchArray(b *testing.B) {
 	}
 }
 
-func BenchmarkSearchSlice(b *testing.B) {
+func BenchmarkSearchS(b *testing.B) {
 	inicialização()
 
 	b.ResetTimer()
@@ -83,7 +109,7 @@ func BenchmarkSearchSlice(b *testing.B) {
 	}
 }
 
-func BenchmarkRemoveArray(b *testing.B) {
+func BenchmarkRemoveA(b *testing.B) {
 	inicialização()
 
 	b.ResetTimer()
@@ -94,55 +120,40 @@ func BenchmarkRemoveArray(b *testing.B) {
 
 }
 
-func BenchmarkRemoveSlice(b *testing.B) {
+func BenchmarkRemoveS(b *testing.B) {
 	inicialização()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-			slice.Remove(7)
+		slice.Remove(7)
 	}
 
 }
-func BenchmarkRemoveFirstArray(b *testing.B) {
+func BenchmarkRemoveFirstA(b *testing.B) {
 	inicialização()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-
-        array = DynamicArray{Size: 0, Capacity: 0, Array: []int{}}
-        for _, num := range numeros {
-            array.Add(num)
-        }
-
-        b.StartTimer()
 
 		array.Remove(-79545)
+
+		array.AddIndice(0, -79545)
 	}
 }
 
-func BenchmarkRemoveFirstSlice(b *testing.B) {
+func BenchmarkRemoveFirstS(b *testing.B) {
 	inicialização()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
 
-        slice := DynamicSlice{Slice: []int{}}
-        for _, num := range numeros {
-            slice.Add(num)
-        }
-
-        b.StartTimer()
-		
 		slice.Remove(-79545)
+
+		slice.AddIndice(0, -79545)
 	}
 }
 
 //forma de rodar estes testes no terminal: go test -run=^$ -bench=. -benchmem
-
-
-

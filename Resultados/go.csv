@@ -1,0 +1,11 @@
+Tipo,Teste de Método,Tempo µs,Bytes
+DynamicArray,Add,659.5689,2056208
+DynamicArray,AddIndice,0.0042,0
+DynamicArray,Search,0.0011,0
+DynamicArray,Remove,0.0009,0
+DynamicArray,RemoveFirst,0.0056,0
+DynamicSlice,Add,1467.2799,4101394
+DynamicSlice,AddIndice,0.0113,0
+DynamicSlice,Search,0.0012,0
+DynamicSlice,Remove,0.0024,0
+DynamicSlice,RemoveFirst,0.0149,0
