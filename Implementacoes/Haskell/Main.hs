@@ -18,88 +18,85 @@ arquivoEntrada = "input/entrada.txt"
 caminhoResultados :: String
 caminhoResultados = "Resultados/resultadosHaskell.csv"
 
--- Medir tempo de execução (microsegundos)
-medirTempo :: IO a -> IO Double
-medirTempo acao = do
-    start <- getCPUTime
-    _ <- acao
-    end <- getCPUTime
-    return $ fromIntegral (end - start) / 1e9  -- ms
-
--- Medir memória e tempo
-medirTempoMemoria :: IO a -> IO (Double, Integer)
-medirTempoMemoria acao = do
+-- Medir memória e tempo com cálculo correto
+medirTempoMemoria :: Int -> IO a -> IO (Double, Integer)
+medirTempoMemoria numElementos acao = do
     performGC
     start <- getCPUTime
     resultado <- acao
     end <- getCPUTime
     let tempo = fromIntegral (end - start) / 1e9
-    -- Estimativa simples de memória (bytes)
-    let memoria = 8 * 1024 * 1024  -- Aproximação: 8MB
-    return (tempo, toInteger memoria)
+    let memoria = calcularMemoria numElementos
+    return (tempo, memoria)
+  where
+    calcularMemoria n = toInteger (56 + (n * 8))
 
 -- Ler dados do arquivo de entrada
-lerArquivoEntrada :: FilePath -> IO [Int]
-lerArquivoEntrada arquivo = do
+lerArquivoEntrada :: FilePath -> Maybe Int -> IO [Int]
+lerArquivoEntrada arquivo maximo = do
     conteudo <- readFile arquivo
-    let numeros = words conteudo
-    return $ map read numeros
+    let numeros = map read (words conteudo)
+    case maximo of
+        Nothing -> return numeros
+        Just n -> return $ take n numeros
 
 -- Teste 1: busca (valor)
-testeBuscaPorValor :: V.Vector Int -> [Int] -> IO (Double, Integer)
-testeBuscaPorValor v valores = do
-    performGC
-    start <- getCPUTime
-    resultado <- return $ length valores
-    
-    medirTempoMemoria $ do
-        let loop [] = return ()
-            loop (x:xs) = let _ = V.findIndex x v in loop xs
-        loop valores
-        return ()
+testeBuscaPorValor :: V.Vector Int -> [Int] -> Int -> IO (Double, Integer)
+testeBuscaPorValor v valores totalElementos = 
+   medirTempoMemoria totalElementos (executarBuscas v valores)
+
+-- Função recursiva para executar buscas
+executarBuscas :: V.Vector Int -> [Int] -> IO ()
+executarBuscas v [] = return ()
+executarBuscas v (x:xs) = do
+    let _ = V.findIndex x v
+    executarBuscas v xs
 
 -- Teste 2: adição de elemento(inicio e fim) 
-testeAdicaoInicio :: [Int] -> IO (Double, Integer)
-testeAdicaoInicio dados = do
-    medirTempoMemoria $ do
-        let loop !v [] = return v
+testeAdicaoInicio :: [Int] -> Int -> IO (Double, Integer)
+testeAdicaoInicio dados totalElementos = 
+    medirTempoMemoria totalElementos $ do
+        let loop !v [] = 
+                let len = V.length v
+                in len `seq` return v
             loop !v (x:xs) = loop (V.cons x v) xs
         _ <- loop V.empty dados
         return ()
 
-testeAdicaoFinal :: [Int] -> IO (Double, Integer)
-testeAdicaoFinal dados = do
-    medirTempoMemoria $ do
-        let loop !v [] = return v
+testeAdicaoFinal :: [Int] -> Int -> IO (Double, Integer)
+testeAdicaoFinal dados totalElementos = 
+    medirTempoMemoria totalElementos $ do
+        let loop !v [] = 
+                let len = V.length v
+                in len `seq` return v
             loop !v (x:xs) = loop (V.snoc v x) xs
         _ <- loop V.empty dados
         return ()
 
 -- Teste 3: remoção de elemento (indice e valor) 
-testeRemoveIndice :: V.Vector Int -> Int -> IO (Double, Integer)
-testeRemoveIndice v numRemocoes = do
-    let len = V.length v
-    let indices = map (\i -> i `mod` len) [0..numRemocoes-1]
-    
-    medirTempoMemoria $ do
-        let loop !v' [] = return v'
-            loop !v' (i:is) 
-              | i < 0 || i >= V.length v' = loop v' is
-              | otherwise = loop (V.removeAt i v') is
-        _ <- loop v indices
-        return ()
+testeRemoveIndice :: V.Vector Int -> Int -> Int -> IO (Double, Integer)
+testeRemoveIndice v numRemocoes totalElementos = 
+    medirTempoMemoria totalElementos (executarRemoveIndice v numRemocoes)
 
-testeRemoveValor :: V.Vector Int -> Int -> IO (Double, Integer)
-testeRemoveValor v numRemocoes = do
-    let len = V.length v
-    let indices = map (\i -> i `mod` len) [0..numRemocoes-1]
-    let valores = map (\i -> v V.! i) indices
-    
-    medirTempoMemoria $ do
-        let loop !v' [] = return v'
-            loop !v' (x:xs) = loop (V.removeFirst x v') xs
-        _ <- loop v valores
-        return ()
+-- Função recursiva que remove sempre o PRIMEIRO elemento (índice 0)
+-- Pior caso: O(n) por remoção, total O(n²)
+executarRemoveIndice :: V.Vector Int -> Int -> IO ()
+executarRemoveIndice v 0 = return ()
+executarRemoveIndice v n
+    | V.null v = return ()
+    | otherwise = executarRemoveIndice (V.removeAt 0 v) (n - 1)
+
+testeRemoveValor :: V.Vector Int -> Int -> Int -> IO (Double, Integer)
+testeRemoveValor v numRemocoes totalElementos = do
+    let primeiroElemento = if V.null v then 0 else V.head v
+    medirTempoMemoria totalElementos (executarRemoveValor v primeiroElemento numRemocoes)
+
+-- Função recursiva
+executarRemoveValor :: V.Vector Int -> Int -> Int -> IO ()
+executarRemoveValor v _ 0 = return ()
+executarRemoveValor v valor n
+    | V.null v = return ()
+    | otherwise = executarRemoveValor (V.removeFirst valor v) valor (n - 1)
 
 -- Gerar CSV com tempo e memória
 gerarCSV :: [(String, Double, Integer)] -> String
@@ -108,56 +105,31 @@ gerarCSV resultados =
     unlines [ printf "%s,%.2f,%d" op tempo mem 
             | (op, tempo, mem) <- resultados ]
 
--- MAIN
-main :: IO ()
-main = do
-    hPutStrLn stderr "=== INICIANDO TESTES HASKELL ==="
+rodarTestes :: [Int] -> String -> Int -> IO [(String, Double, Integer)]
+rodarTestes dados nomeArquivo totalElementos = do
+    hPutStrLn stderr $ "\n>>> Iniciando testes com " ++ show totalElementos ++ " elementos..."
     
-    -- Ler dados do arquivo de entrada
-    hPutStrLn stderr $ "Lendo arquivo: " ++ arquivoEntrada
-    dados <- lerArquivoEntrada arquivoEntrada
-    let totalElementos = length dados
-    hPutStrLn stderr $ "Total de elementos lidos: " ++ show totalElementos
-    
-    -- Criar vetor para testes
     let vetorTeste = V.fromList dados
-    
-    -- Número de operações para cada teste
     let numOps = min 1000 (totalElementos `div` 10)
     
-    hPutStrLn stderr $ "Número de operações por teste: " ++ show numOps
+    hPutStrLn stderr $ "    Operações por teste: " ++ show numOps
     
-    hPutStrLn stderr "\n--- Teste de Busca por Valor ---"
+    hPutStrLn stderr "    Rodando: Busca por valor inexistente..."
+    let valoresBusca = map (\i -> 999999999 + i) [0..numOps-1]
+    (tempoBuscaValor, memBuscaValor) <- testeBuscaPorValor vetorTeste valoresBusca totalElementos
     
-    -- Pegar valores do array para buscar (a cada 100 elementos)
-    let valoresBusca = map (\i -> dados !! (i * 100 `mod` length dados)) [0..numOps-1]
-    (tempoBuscaValor, memBuscaValor) <- testeBuscaPorValor vetorTeste valoresBusca
-    hPutStrLn stderr $ "  Tempo: " ++ printf "%.2f" tempoBuscaValor ++ " ms"
-    hPutStrLn stderr $ "  Memória: " ++ show memBuscaValor ++ " bytes"
+    hPutStrLn stderr "    Rodando: Adição no início..."
+    (tempoAdicaoInicio, memAdicaoInicio) <- testeAdicaoInicio (take numOps dados) totalElementos
     
-    hPutStrLn stderr "\n--- Testes de Adição ---"
-    (tempoAdicaoInicio, memAdicaoInicio) <- testeAdicaoInicio (take numOps dados)
-    hPutStrLn stderr $ "  Adição no início:"
-    hPutStrLn stderr $ "    Tempo: " ++ printf "%.2f" tempoAdicaoInicio ++ " ms"
-    hPutStrLn stderr $ "    Memória: " ++ show memAdicaoInicio ++ " bytes"
+    hPutStrLn stderr "    Rodando: Adição no final..."
+    (tempoAdicaoFinal, memAdicaoFinal) <- testeAdicaoFinal (take numOps dados) totalElementos
     
-    (tempoAdicaoFinal, memAdicaoFinal) <- testeAdicaoFinal (take numOps dados)
-    hPutStrLn stderr $ "  Adição no final:"
-    hPutStrLn stderr $ "    Tempo: " ++ printf "%.2f" tempoAdicaoFinal ++ " ms"
-    hPutStrLn stderr $ "    Memória: " ++ show memAdicaoFinal ++ " bytes"
+    hPutStrLn stderr "    Rodando: Remoção por índice..."
+    (tempoRemoveIndice, memRemoveIndice) <- testeRemoveIndice vetorTeste (min 100 numOps) totalElementos
     
-    hPutStrLn stderr "\n--- Testes de Remoção ---"
-    (tempoRemoveIndice, memRemoveIndice) <- testeRemoveIndice vetorTeste numOps
-    hPutStrLn stderr $ "  Remoção por índice:"
-    hPutStrLn stderr $ "    Tempo: " ++ printf "%.2f" tempoRemoveIndice ++ " ms"
-    hPutStrLn stderr $ "    Memória: " ++ show memRemoveIndice ++ " bytes"
+    hPutStrLn stderr "    Rodando: Remoção por valor..."
+    (tempoRemoveValor, memRemoveValor) <- testeRemoveValor vetorTeste (min 100 numOps) totalElementos
     
-    (tempoRemoveValor, memRemoveValor) <- testeRemoveValor vetorTeste (min 100 numOps)
-    hPutStrLn stderr $ "  Remoção por valor:"
-    hPutStrLn stderr $ "    Tempo: " ++ printf "%.2f" tempoRemoveValor ++ " ms"
-    hPutStrLn stderr $ "    Memória: " ++ show memRemoveValor ++ " bytes"
-    
-    -- Resultados
     let resultados = 
             [ ("busca", tempoBuscaValor, memBuscaValor)
             , ("adicaoInicio", tempoAdicaoInicio, memAdicaoInicio)
@@ -166,11 +138,73 @@ main = do
             , ("remocaoValor", tempoRemoveValor, memRemoveValor)
             ]
     
-    -- Gerar CSV
     let csv = gerarCSV resultados
-    writeFile caminhoResultados csv
+    writeFile ("Resultados/" ++ nomeArquivo) csv
     
-    putStrLn "\nResultados para checar"
-    putStrLn "Operações testadas:"
-    mapM_ (\(op, tempo, mem) -> putStrLn $ "  " ++ op ++ ": " ++ printf "%.2f ms" tempo ++ " | " ++ show mem ++ " bytes") resultados
+    hPutStrLn stderr $ "    ✅ Resultado salvo em: Resultados/" ++ nomeArquivo
     
+    return resultados
+
+-- MAIN
+main :: IO ()
+main = do
+    putStrLn ""
+    putStrLn "╔════════════════════════════════════════════════════════════════╗"
+    putStrLn "║                  TESTES DE PERFORMANCE ARRAYLIST                ║"
+    putStrLn "║                   Rodando: 10k, 30k, 50k, 100k                  ║"
+    putStrLn "╚════════════════════════════════════════════════════════════════╝"
+    putStrLn ""
+    
+    hPutStrLn stderr "=== INICIANDO TESTES HASKELL ==="
+    
+    hPutStrLn stderr $ "Lendo arquivo: " ++ arquivoEntrada
+    todosDados <- lerArquivoEntrada arquivoEntrada Nothing
+    let totalDisponivel = length todosDados
+    hPutStrLn stderr $ "Total de elementos disponíveis: " ++ show totalDisponivel
+    
+    let tamanhos = [(10000, "resultados_10k.csv")
+                   ,(30000, "resultados_30k.csv")
+                   ,(50000, "resultados_50k.csv")
+                   ,(100000, "resultados_100k.csv")]
+    
+    todoResultados <- mapM (\(tam, arquivo) -> do
+        let dados = take tam todosDados
+        rodarTestes dados arquivo tam
+        ) tamanhos
+    
+    putStrLn ""
+    putStrLn "╔════════════════════════════════════════════════════════════════╗"
+    putStrLn "║                    TODOS OS TESTES CONCLUÍDOS! ✅               ║"
+    putStrLn "╚════════════════════════════════════════════════════════════════╝"
+    putStrLn ""
+    putStrLn "📊 RESUMO DOS RESULTADOS"
+    putStrLn "════════════════════════════════════════════════════════════════"
+    putStrLn ""
+    
+    putStrLn (printf "%-30s %12s %12s %12s %12s" 
+        "Operação" "10k (ms)" "30k (ms)" "50k (ms)" "100k (ms)")
+    putStrLn "────────────────────────────────────────────────────────────────"
+    
+    let allOps = ["busca", "adicaoInicio", "adicaoFinal", 
+                  "remocaoIndice", "remocaoValor"]
+    
+    mapM_ (\op -> do
+        let tempos = map (\(operacao, tempo, memoria) -> if operacao == op then tempo else 0) (concat todoResultados)
+        
+        case tempos of
+            [t1, t2, t3, t4] -> 
+                putStrLn (printf "%-30s %12.2f %12.2f %12.2f %12.2f" 
+                    op t1 t2 t3 t4)
+            _ -> return ()
+        ) allOps
+    
+    putStrLn ""
+    putStrLn "📁 Arquivos CSV gerados:"
+    putStrLn "   - Resultados/resultados_10k.csv"
+    putStrLn "   - Resultados/resultados_30k.csv"
+    putStrLn "   - Resultados/resultados_50k.csv"
+    putStrLn "   - Resultados/resultados_100k.csv"
+    putStrLn ""
+    putStrLn "Para visualizar um arquivo:"
+    putStrLn "   cat Resultados/resultados_10k.csv"
+    putStrLn ""

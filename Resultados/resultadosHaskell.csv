@@ -1,6 +1,6 @@
 Operacao,Tempo(ms),Memoria(bytes)
-busca,0.02,8388608
-adicaoInicio,15.48,8388608
-adicaoFinal,18.33,8388608
-remocaoIndice,10358.26,8388608
-remocaoValor,1187.20,8388608
+busca,0.01,8388608
+adicaoInicio,0.10,8388608
+adicaoFinal,0.08,8388608
+remocaoIndice,9972.12,8388608
+remocaoValor,0.01,8388608
