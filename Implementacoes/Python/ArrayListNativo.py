@@ -15,6 +15,10 @@ class ArrayListNativo:
     def isFull(self):
         return self.size == len(self.arraylist)
     
+    # Retorna quantidade de elementos na lista (tamanho)
+    def getSize(self):
+        return self.size
+    
     # Verifica se o índice passado é válido
     def isValid(self, index):
         return index >= 0 and index <= self.size
@@ -26,6 +30,12 @@ class ArrayListNativo:
     # Move elementos para a esquerda
     def shiftLeft(self, index):
         self.arraylist[index:self.size-1] = self.arraylist[index+1:self.size]
+
+    # Retorna o elemento pelo indice
+    def getElement(self, index):
+        if (self.isValid(index)):
+            return self.arraylist[index]
+        return -1
 
     # Dobra tamanho da lista e realoca elementos para lista de novo tamanho
     def resize(self):
@@ -58,6 +68,12 @@ class ArrayListNativo:
         if (self.size >= 1):
             self.size -= 1
     
+    # Remove por ELemento:
+    def remove_Element(self, element):
+        index = self.search(element)
+        if (index != -1):
+            self.remove_index(index)
+
     # Remove elemento no índice passado como parâmetro
     def remove_index(self, index):
         if (self.isValid(index) and index < self.size):
