@@ -24,8 +24,9 @@ def read_data(filepath, max_n):
     return data
 
 
+
 # ----- MEDIÇÃO DE TEMPO ------
-def measure_time(func):
+def measure_time(func): #runs=5
     start = time.perf_counter()
     func()
     end = time.perf_counter()
@@ -77,7 +78,7 @@ def main():
 
         with open(output_path, "w") as w:
 
-            w.write("Linguagem_Tipo, Operacao, Tempo(ms), Memoria(bytes)\n")
+            w.write("Linguagem_Tipo, tamanho, Operacao, Tempo(ms), Memoria(bytes)\n")
 
             for n in sizes:
                 current_data = data[:n] # Fatiamento para testar código com diferentes sizes
@@ -90,14 +91,14 @@ def main():
 
                 list_manual = ArrayListManual(10)
                 m_manual_add = measure_memory(lambda: insert_manual(True))
-                w.write(f"Python_ArrayManual,adicaoInicio,{t_manual_add},{m_manual_add}\n")
+                w.write(f"Python_ArrayManual,{n},adicaoInicio,{t_manual_add:.3f},{m_manual_add}\n")
 
                 list_native = ArrayListNativo(10)
                 t_native_add = measure_time(lambda: insert_native(True))
 
                 list_native = ArrayListNativo(10)
                 m_native_add = measure_memory(lambda: insert_native(True))
-                w.write(f"Python_ArrayNativo,adicaoInicio,{t_native_add},{m_native_add}\n")
+                w.write(f"Python_ArrayNativo,{n},adicaoInicio,{t_native_add:.3f},{m_native_add}\n")
 
                 # adições sem índice - final:
                 list_manual = ArrayListManual(10)
@@ -105,14 +106,14 @@ def main():
 
                 list_manual = ArrayListManual(10)
                 m_manual_add = measure_memory(lambda: insert_manual(False))
-                w.write(f"Python_ArrayManual,adicaoFinal,{t_manual_add},{m_manual_add}\n")
+                w.write(f"Python_ArrayManual,{n},adicaoFinal,{t_manual_add:.3f},{m_manual_add}\n")
 
                 list_native = ArrayListNativo(10)
                 t_native_add = measure_time(lambda: insert_native(False))
 
                 list_native = ArrayListNativo(10)
                 m_native_add = measure_memory(lambda: insert_native(False))
-                w.write(f"Python_ArrayNativo,adicaoFinal,{t_native_add},{m_native_add}\n")
+                w.write(f"Python_ArrayNativo,{n},adicaoFinal,{t_native_add:.3f},{m_native_add}\n")
 
                 
                 # ------ BUSCA (PIOR CASO -> 7) ------
@@ -120,13 +121,13 @@ def main():
                 insert_manual(False)
                 t_manual_search = measure_time(lambda: list_manual.search(target))
                 m_manual_search = measure_memory(lambda: list_manual.search(target))
-                w.write(f"Python_ArrayManual,busca,{t_manual_search},{m_manual_search}\n")
+                w.write(f"Python_ArrayManual,{n},busca,{t_manual_search:.3f},{m_manual_search}\n")
 
                 list_native = ArrayListNativo(10)
                 insert_native(False)
                 t_native_search = measure_time(lambda: list_native.search(target))
                 m_native_search = measure_memory(lambda: list_native.search(target))
-                w.write(f"Python_ArrayNativo,busca,{t_native_search},{m_native_search}\n")
+                w.write(f"Python_ArrayNativo,{n},busca,{t_native_search:.3f},{m_native_search}\n")
 
 
     
@@ -137,32 +138,32 @@ def main():
                 insert_manual(False)
                 t_manual_remove = measure_time(lambda: list_manual.removePorElement(target))
                 m_manual_remove = measure_memory(lambda: list_manual.removePorElement(target))
-                w.write(f"Python_ArrayManual,remocaoValor,{t_manual_remove},{m_manual_remove}\n")
+                w.write(f"Python_ArrayManual,{n},remocaoValor,{t_manual_remove:.3f},{m_manual_remove}\n")
 
                 list_native = ArrayListNativo(10)
                 insert_native(False)
                 t_native_remove = measure_time(lambda: list_native.remove_Element(target))
                 m_native_remove = measure_memory(lambda: list_native.remove_Element(target))
-                w.write(f"Python_ArrayNativo,remocaoValor,{t_native_remove},{m_native_remove}\n")
+                w.write(f"Python_ArrayNativo,{n},remocaoValor,{t_native_remove:.3f},{m_native_remove}\n")
 
                 # remoção por índice qualquer (remoção + shiftLeft)
                 list_manual = ArrayListManual(10)
                 insert_manual(False)
-                t_manual_remove = measure_time(lambda: list_manual.removePorindex(5))
+                t_manual_remove = measure_time(lambda: list_manual.removePorindex(0))
 
                 list_manual = ArrayListManual(10)
                 insert_manual(False)
-                m_manual_remove = measure_memory(lambda: list_manual.removePorindex(5))
-                w.write(f"Python_ArrayManual,remocaoIndice,{t_manual_remove},{m_manual_remove}\n")
+                m_manual_remove = measure_memory(lambda: list_manual.removePorindex(0))
+                w.write(f"Python_ArrayManual,{n},remocaoIndice,{t_manual_remove:.3f},{m_manual_remove}\n")
 
                 list_native = ArrayListNativo(10)
                 insert_native(False)
-                t_native_remove = measure_time(lambda: list_native.remove_index(5))
+                t_native_remove = measure_time(lambda: list_native.remove_index(0))
             
                 list_native = ArrayListNativo(10)
                 insert_native(False)
-                m_native_remove = measure_memory(lambda: list_native.remove_index(5))
-                w.write(f"Python_ArrayNativo,remocaoIndice,{t_native_remove},{m_native_remove}\n")
+                m_native_remove = measure_memory(lambda: list_native.remove_index(0))
+                w.write(f"Python_ArrayNativo,{n},remocaoIndice,{t_native_remove:.3f},{m_native_remove}\n")
 
     except Exception as e:
         print("Erro ao escrever CSV:", e)

@@ -1,0 +1,11 @@
+Linguagem_Tipo, tamanho, Operacao, Tempo(ms), Memoria(bytes)
+Python_ArrayManual,10000,adicaoInicio,2370.444,123080
+Python_ArrayNativo,10000,adicaoInicio,319.516,242016
+Python_ArrayManual,10000,adicaoFinal,1.699,123080
+Python_ArrayNativo,10000,adicaoFinal,1.447,204880
+Python_ArrayManual,10000,busca,0.309,120
+Python_ArrayNativo,10000,busca,0.320,120
+Python_ArrayManual,10000,remocaoValor,0.301,120
+Python_ArrayNativo,10000,remocaoValor,0.334,120
+Python_ArrayManual,10000,remocaoIndice,0.478,152
+Python_ArrayNativo,10000,remocaoIndice,0.067,160016
