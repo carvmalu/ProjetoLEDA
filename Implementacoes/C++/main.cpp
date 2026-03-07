@@ -1,53 +1,40 @@
 #include <iostream>
-#include <chrono>
 #include <vector>
+#include <chrono>
 #include <fstream>
+#include <sys/resource.h>
 #include "ArrayListF.hpp"
 #include "ArrayListNM.hpp"
 
 using namespace std;
 using namespace std::chrono;
 
-int main() {
-    int totalElementos = 50000;
+long get_mem() { struct rusage u; getrusage(RUSAGE_SELF, &u); return u.ru_maxrss * 1024; }
 
-    // 1. Versão Iterativa (FOR)
-    ArrayListF listaFor(10);
-    auto startF = high_resolution_clock::now();
-    for(int i = 0; i < totalElementos; i++) listaFor.add(0, i);
-    auto endF = high_resolution_clock::now();
-
-    // 2. Versão Nativa (std::move/copy)
-    ArrayListNM listaNM(10);
-    auto startNM = high_resolution_clock::now();
-    for(int i = 0; i < totalElementos; i++) listaNM.add(0, i);
-    auto endNM = high_resolution_clock::now();
-
-    // 3. Versão Build-in (std::vector)
-    vector<int> listaCpp;
-    auto startCpp = high_resolution_clock::now();
-    for(int i = 0; i < totalElementos; i++) listaCpp.insert(listaCpp.begin(), i);
-    auto endCpp = high_resolution_clock::now();
-
-    // Cálculos de tempo em ms
-    auto durF = duration_cast<milliseconds>(endF - startF).count();
-    auto durNM = duration_cast<milliseconds>(endNM - startNM).count();
-    auto durCpp = duration_cast<milliseconds>(endCpp - startCpp).count();
-
-    cout << "Tempo com FOR: " << durF << "ms" << endl;
-    cout << "Tempo com NM (std::copy): " << durNM << "ms" << endl;
-    cout << "Tempo std::vector: " << durCpp << "ms" << endl;
-
-    // Gerar CSV
-    ofstream file("../../Resultados/Java/resultadosC++.csv");
-    if (file.is_open()) {
-        file << "Implementacao,TempoMS\n";
-        file << "Iterativa For," << durF << "\n";
-        file << "Nativa copy," << durNM << "\n";
-        file << "C++ Oficial (vector)," << durCpp << "\n";
-        file.close();
-        cout << "Arquivo gerado com sucesso!" << endl;
+void rodar(int n, ofstream& f, string tipo) {
+    for (int r = 0; r < 30; r++) {
+        if (tipo == "CPP_Manual") {
+            ArrayListF l(n + 1); for(int i=0; i<n; i++) l.add(i);
+            auto s = high_resolution_clock::now(); l.search(7); auto e = high_resolution_clock::now();
+            f << tipo << "," << n << ",busca," << duration<double, milli>(e-s).count() << "," << get_mem() << "\n";
+            // Adicione as outras operações aqui seguindo o mesmo padrão...
+        } else {
+            ArrayListNM l(n + 1); for(int i=0; i<n; i++) l.add(i);
+            auto s = high_resolution_clock::now(); l.search(7); auto e = high_resolution_clock::now();
+            f << tipo << "," << n << ",busca," << duration<double, milli>(e-s).count() << "," << get_mem() << "\n";
+        }
     }
+}
 
+int main() {
+    ofstream f("../../Resultados/Java/resultadosC++.csv");
+    f << "Linguagem_Tipo,Tamanho,Operacao,Tempo(ms),Memoria(bytes)\n";
+    for (int n : {10000, 30000, 50000}) {
+        cout << "Testando tamanho: " << n << endl;
+        rodar(n, f, "CPP_Manual");
+        rodar(n, f, "CPP_Nativo");
+    }
+    f.close();
+    cout << "Teste concluído! Verifique o arquivo teste_resultados.csv" << endl;
     return 0;
 }
