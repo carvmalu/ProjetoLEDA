@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
+	"runtime"
+	"strings"
 	"testing"
 )
 
 var numeros []int
-var array DynamicArray
-var slice DynamicSlice
+var da DynamicArray
+var ds DynamicSlice
 
 func main() {
 
@@ -25,20 +28,30 @@ func main() {
 		numeros = append(numeros, temp)
 	}
 
-	array = DynamicArray{Size: len(numeros), Capacity: len(numeros), Array: numeros}
-	slice = DynamicSlice{Slice: numeros}
+    // Tamanhos de entrada
+	entradas := []int{10000, 30000, 50000, 100000}
 
-	// Estes são os resultados de cada um dos testes executados
-	data := [][]string{
-		{"Tipo", "Operacao", "Tempo(ms)", "Memoria(bytes)"},
-		append([]string{"DynamicArray", "AddIndice"}, benchmarkFormat(BenchmarkAddIndiceArray)...),
-		append([]string{"DynamicArray", "Search"}, benchmarkFormat(BenchmarkSearchArray)...),
-		append([]string{"DynamicArray", "RemoveElement"}, benchmarkFormat(BenchmarkRemoveElementArray)...),
-		append([]string{"DynamicArray", "RemoveIndice"}, benchmarkFormat(BenchmarkRemoveIndiceArray)...),
-		append([]string{"DynamicSlice", "AddIndice"}, benchmarkFormat(BenchmarkAddIndiceSlice)...),
-		append([]string{"DynamicSlice", "Search"}, benchmarkFormat(BenchmarkSearchSlice)...),
-		append([]string{"DynamicSlice", "RemoveElement"}, benchmarkFormat(BenchmarkRemoveElementSlice)...),
-		append([]string{"DynamicSlice", "RemoveIndice"}, benchmarkFormat(BenchmarkRemoveIndiceSlice)...),
+    // Funções/Benchmarks que serão testadas
+	funcoes := []func(b *testing.B){BenchmarkAddIndiceArray, BenchmarkSearchArray,
+                                     BenchmarkRemoveElementArray, BenchmarkRemoveIndiceArray,
+                                     BenchmarkAddIndiceSlice, BenchmarkSearchSlice,
+                                     BenchmarkRemoveElementSlice, BenchmarkRemoveIndiceSlice}
+
+    // Armazenando os resultados
+	data := [][]string {{"Linguagem_Tipo", "Tamanho", "Operacao", "Tempo(ms)", "Memoria(bytes)"}}
+
+	for _, n := range entradas {
+		da = DynamicArray{n, n, numeros[:n]}
+		for _, f := range funcoes[:4] {
+			data = append(data, append([]string{"Go_DynamicArray", fmt.Sprintf("%d", n)}, benchmarkFormat(f)...))
+		}
+	}
+
+	for _, n := range entradas {
+		ds = DynamicSlice{numeros[:n]}
+		for _, f := range funcoes[4:] {
+			data = append(data, append([]string{"Go_DynamicSlice", fmt.Sprintf("%d", n)}, benchmarkFormat(f)...))
+		}
 	}
 
 	// Cria ou atualiza o arquivo go.csv
@@ -61,112 +74,19 @@ func main() {
 
 // Formata o resultado das benchmarks
 func benchmarkFormat(f func(b *testing.B)) []string {
+	funcao := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+	nomeFunc := strings.Split(funcao, ".")
+
+    operacao := nomeFunc[len(nomeFunc)-1]
+    operacao = strings.ReplaceAll(operacao, "Benchmark", "")
+    operacao = strings.ReplaceAll(operacao, "Array", "")
+    operacao = strings.ReplaceAll(operacao, "Slice", "")
+
 	resultado := testing.Benchmark(f)
 	tempo := float64(resultado.T.Nanoseconds()) / float64(resultado.N) / 1e6
 	memoria := resultado.AllocedBytesPerOp()
-	dados := []string{
-		fmt.Sprintf("%.3f", tempo),
-		fmt.Sprintf("%d", memoria),
-	}
+
+	dados := []string{operacao, fmt.Sprintf("%.3f", tempo), fmt.Sprintf("%d", memoria)}
 
 	return dados
 }
-
-// Testes de AddIndice no pior caso (adicionar no índice 0)
-func BenchmarkAddIndiceArray(b *testing.B) {
-
-	b.ReportAllocs()
-
-	for i := 0; i < b.N; i++ {
-
-		array.AddIndice(0, 824)
-
-		b.StopTimer()
-		array.RemoveIndice(0)
-		b.StartTimer()
-	}
-}
-
-func BenchmarkAddIndiceSlice(b *testing.B) {
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-
-		slice.AddIndice(0, 824)
-
-		b.StopTimer()
-		slice.RemoveIndice(0)
-		b.StartTimer()
-	}
-}
-
-// Teste de Search no pior caso (elemento não existente no slice)
-func BenchmarkSearchArray(b *testing.B) {
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		array.Search(7)
-	}
-}
-
-func BenchmarkSearchSlice(b *testing.B) {
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		slice.Search(7)
-	}
-}
-
-// Teste de RemoveElement no pior caso (elemento não existe no slice)
-func BenchmarkRemoveElementArray(b *testing.B) {
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		array.RemoveElemento(7)
-	}
-
-}
-
-func BenchmarkRemoveElementSlice(b *testing.B) {
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		slice.RemoveElemento(7)
-	}
-
-}
-
-// Testes de RemoveIndice no pior caso (remover no indice 0)
-func BenchmarkRemoveIndiceArray(b *testing.B) {
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-
-		array.RemoveIndice(0)
-
-		b.StopTimer()
-		array.AddIndice(0, -79545)
-		b.StartTimer()
-	}
-}
-
-func BenchmarkRemoveIndiceSlice(b *testing.B) {
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-
-		slice.RemoveIndice(0)
-
-		b.StopTimer()
-		slice.AddIndice(0, -79545)
-		b.StartTimer()
-	}
-}
-

@@ -29,20 +29,6 @@ func (da *DynamicArray) Add(element int) {
 	da.Size++
 }
 
-// Adiciona elementos no indice indicado.
-func (da *DynamicArray) AddIndice(indice int, element int) {
-	if da.isFull() {
-		da.resize()
-	}
-	if indice == da.Size {
-		da.Add(element)
-	} else if da.isValid(indice) {
-		array.shiftRight(indice)
-		da.Array[indice] = element
-		da.Size++
-	}
-}
-
 // Move os elementos para a direita.
 func (da *DynamicArray) shiftRight(indice int) {
 	if da.isValid(indice) {
@@ -53,6 +39,22 @@ func (da *DynamicArray) shiftRight(indice int) {
 		}
 	}
 }
+
+// Adiciona elementos no indice indicado.
+func (da *DynamicArray) AddIndice(indice int, element int) {
+	if da.isFull() {
+		da.resize()
+	}
+	if indice == da.Size {
+		da.Add(element)
+	} else if da.isValid(indice) {
+		da.shiftRight(indice)
+		da.Array[indice] = element
+		da.Size++
+	}
+}
+
+
 
 // Move os elementos para a esquerda.
 func (da *DynamicArray) shiftLeft(indice int) {
