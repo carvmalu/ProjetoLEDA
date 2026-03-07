@@ -33,9 +33,9 @@ public class Runner {
         }
         return sizes;
     }
-    //Metodo auxiliar para limpar memoria.
+
+    // CORREÇÃO: sem System.gc() aqui — não deve rodar depois da operação.
     private long getUsedMemory() {
-        System.gc(); 
         Runtime runtime = Runtime.getRuntime();
         return runtime.totalMemory() - runtime.freeMemory();
     }
@@ -50,7 +50,6 @@ public class Runner {
         return (System.nanoTime() - start) / 1_000_000.0;
     }
 
-  
     public double measureAddNative(ArrayList<Integer> list, int[] data) {
         long start = System.nanoTime();
         for (int i = 0; i < data.length; i++) 
@@ -58,13 +57,12 @@ public class Runner {
         return (System.nanoTime() - start) / 1_000_000.0;
     }
 
-  //Search.
+    //Search.
     public double measureSearch(ArrayListF list, int target) {
         long start = System.nanoTime();
         list.search(target);
         return (System.nanoTime() - start) / 1_000_000.0;
     }
-
 
     public double measureSearchNative(ArrayList<Integer> list, int target) {
         long start = System.nanoTime();
@@ -77,8 +75,7 @@ public class Runner {
         long start = System.nanoTime();
         list.remove(Integer.valueOf(n));
         return (System.nanoTime() - start) / 1_000_000.0;
-}
-      
+    }
 
     public double measureRemoveNative(ArrayList<Integer> list, int n) {
         long start = System.nanoTime();
@@ -87,9 +84,10 @@ public class Runner {
     }
 
     //Métodos auxiliares para medir consumo de memória.
-    
-    //Inserção. 
+
+    //Inserção.
     public long measureAddMemory(ArrayListF list, int[] data){
+        System.gc(); // CORREÇÃO: gc() apenas antes, para limpar o heap antes da medição.
         long beforeUsedMem = getUsedMemory();
         for (int i = 0; i < data.length; i++) 
             list.add(0, data[i]);       
@@ -98,6 +96,7 @@ public class Runner {
     }
     
     public long measureAddNativeMemory(ArrayList<Integer> list, int[] data){
+        System.gc(); // CORREÇÃO: gc() apenas antes, para limpar o heap antes da medição.
         long beforeUsedMem = getUsedMemory();
         for (int i = 0; i < data.length; i++) 
             list.add(0, data[i]);
@@ -106,15 +105,16 @@ public class Runner {
     }
 
     //Search.
-     public long measureSearchMemory(ArrayListF list, int target) {
+    public long measureSearchMemory(ArrayListF list, int target) {
+        System.gc();
         long beforeUsedMem = getUsedMemory();
         list.search(target);
         long afterUsedMem = getUsedMemory();
         return (afterUsedMem - beforeUsedMem);
     }
 
-
     public long measureSearchNativeMemory(ArrayList<Integer> list, int target) {
+        System.gc();
         long beforeUsedMem = getUsedMemory();
         list.contains(target); 
         long afterUsedMem = getUsedMemory();
@@ -123,14 +123,15 @@ public class Runner {
 
     //Remoção.
     public long measureRemoveMemory(ArrayListF list, int n) {
+        System.gc();
         long beforeUsedMem = getUsedMemory();
         list.remove(Integer.valueOf(n));
         long afterUsedMem = getUsedMemory();
         return (afterUsedMem - beforeUsedMem);
     }
-      
 
     public long measureRemoveNativeMemory(ArrayList<Integer> list, int n) {
+        System.gc();
         long beforeUsedMem = getUsedMemory();
         list.remove(Integer.valueOf(n));
         long afterUsedMem = getUsedMemory();
