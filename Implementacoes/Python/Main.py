@@ -115,7 +115,7 @@ def main():
 
         with open(output_path, "w") as w:
 
-            w.write("Linguagem_Tipo, tamanho, Operacao, Tempo(ms), Memoria(bytes)\n")
+            w.write("Linguagem_Tipo, Tamanho, Operacao, Tempo(ms), Memoria(bytes)\n")
 
             for n in sizes:
                 current_data = data[:n] # Fatiamento para testar código com diferentes sizes
