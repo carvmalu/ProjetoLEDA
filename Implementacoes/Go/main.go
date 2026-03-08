@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
-	"testing"
 )
 
 var numeros []int
@@ -32,10 +31,10 @@ func main() {
 	entradas := []int{10000, 30000, 50000, 100000}
 
     // Funções/Benchmarks que serão testadas
-	funcoes := []func(b *testing.B){BenchmarkAddIndiceArray, BenchmarkSearchArray,
-                                     BenchmarkRemoveElementArray, BenchmarkRemoveIndiceArray,
-                                     BenchmarkAddIndiceSlice, BenchmarkSearchSlice,
-                                     BenchmarkRemoveElementSlice, BenchmarkRemoveIndiceSlice}
+	funcoes := []func() (float64, float64) {AdicionaIndiceArray, BuscaArray,
+                                            RemoveElementoArray, RemoveIndiceArray,
+                                            AdicionaIndiceSlice, BuscaSlice,
+                                            RemoveElementoSlice, RemoveIndiceSlice}
 
     // Armazenando os resultados
 	data := [][]string {{"Linguagem_Tipo", "Tamanho", "Operacao", "Tempo(ms)", "Memoria(bytes)"}}
@@ -73,20 +72,17 @@ func main() {
 }
 
 // Formata o resultado das benchmarks
-func benchmarkFormat(f func(b *testing.B)) []string {
+func benchmarkFormat(f func() (float64, float64)) []string {
+	memoria, tempo := f()
+
 	funcao := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 	nomeFunc := strings.Split(funcao, ".")
 
     operacao := nomeFunc[len(nomeFunc)-1]
-    operacao = strings.ReplaceAll(operacao, "Benchmark", "")
     operacao = strings.ReplaceAll(operacao, "Array", "")
     operacao = strings.ReplaceAll(operacao, "Slice", "")
 
-	resultado := testing.Benchmark(f)
-	tempo := float64(resultado.T.Nanoseconds()) / float64(resultado.N) / 1e6
-	memoria := resultado.AllocedBytesPerOp()
-
-	dados := []string{operacao, fmt.Sprintf("%.3f", tempo), fmt.Sprintf("%d", memoria)}
+	dados := []string{operacao, fmt.Sprintf("%.3f", tempo / 1e3), fmt.Sprintf("%.0f", memoria)}
 
 	return dados
 }
