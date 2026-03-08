@@ -1,110 +1,177 @@
-//Funções responsáveis pelo cálculo do tempo de execução e consumo de memória
+// Funções responsáveis pelo cálculo do tempo de execução e consumo de memória
 package main
 
-import "testing"
+import (
+	"runtime"
+	"time"
+)
 
 // Testes de AddIndice no pior caso (adicionar no índice 0)
-func BenchmarkAddIndiceArray(b *testing.B) {
+func AdicionaIndiceArray() (float64, float64){
+    var tempo float64
+    var memoria float64
+    
+    for i := 0; i < 30; i++ {
 
-    b.ReportAllocs()
-    b.ResetTimer()
-
-    for i := 0; i < b.N; i++ {
-
+        runtime.GC()
+        var memBefore, memAfter runtime.MemStats
+        runtime.ReadMemStats(&memBefore)
+        start := time.Now()
+        
         da.AddIndice(0, 824)
 
-        b.StopTimer()
+        tempo += float64(time.Since(start).Microseconds())
+        runtime.ReadMemStats(&memAfter)
+        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+
         da.RemoveIndice(0)
-        b.StartTimer()
     }
+    return memoria/30, tempo/30
 }
 
-func BenchmarkAddIndiceSlice(b *testing.B) {
+func AdicionaIndiceSlice() (float64, float64) {
+    var tempo float64
+    var memoria float64
+    
+    for i := 0; i < 30; i++ {
 
-    b.ReportAllocs()
-    b.ResetTimer()
-
-    for i := 0; i < b.N; i++ {
+        runtime.GC()
+        var memBefore, memAfter runtime.MemStats
+        runtime.ReadMemStats(&memBefore)
+        start := time.Now()
 
         ds.AddIndice(0, 824)
 
-        b.StopTimer()
+        tempo += float64(time.Since(start).Microseconds())
+        runtime.ReadMemStats(&memAfter)
+        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+
         ds.RemoveIndice(0)
-        b.StartTimer()
     }
+    return memoria/30, tempo/30
 }
 
 // Teste de Search no pior caso (elemento não existente no slice)
-func BenchmarkSearchArray(b *testing.B) {
+func BuscaArray() (float64, float64) {
+    var tempo float64
+    var memoria float64
 
-    b.ReportAllocs()
-    b.ResetTimer()
+    for i := 0; i < 30; i++ {
+        runtime.GC()
+        var memBefore, memAfter runtime.MemStats
+        runtime.ReadMemStats(&memBefore)
+        start := time.Now()
 
-    for i := 0; i < b.N; i++ {
         da.Search(7)
+
+        tempo += float64(time.Since(start).Microseconds())
+        runtime.ReadMemStats(&memAfter)
+        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
     }
+    return memoria/30, tempo/30
 }
 
-func BenchmarkSearchSlice(b *testing.B) {
+func BuscaSlice() (float64, float64) {
+    var tempo float64
+    var memoria float64
 
-    b.ReportAllocs()
-    b.ResetTimer()
+    for i := 0; i < 30; i++ {
+        runtime.GC()
+        var memBefore, memAfter runtime.MemStats
+        runtime.ReadMemStats(&memBefore)
+        start := time.Now()
 
-    for i := 0; i < b.N; i++ {
         ds.Search(7)
+
+        tempo += float64(time.Since(start).Microseconds())
+        runtime.ReadMemStats(&memAfter)
+        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
     }
+    return memoria/30, tempo/30
 }
 
 // Teste de RemoveElement no pior caso (elemento não existe no slice)
-func BenchmarkRemoveElementArray(b *testing.B) {
+func RemoveElementoArray() (float64, float64) {
+    var tempo float64
+    var memoria float64
 
-    b.ReportAllocs()
-    b.ResetTimer()
+    for i := 0; i < 30; i++ {
+        runtime.GC()
+        var memBefore, memAfter runtime.MemStats
+        runtime.ReadMemStats(&memBefore)
+        start := time.Now()
 
-    for i := 0; i < b.N; i++ {
         da.RemoveElemento(-79545)
-    }
 
+        tempo += float64(time.Since(start).Microseconds())
+        runtime.ReadMemStats(&memAfter)
+        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+
+        da.AddIndice(0, -79545)
+    }
+    return memoria/30, tempo/30
 }
 
-func BenchmarkRemoveElementSlice(b *testing.B) {
+func  RemoveElementoSlice() (float64, float64) {
+    var tempo float64
+    var memoria float64
 
-    b.ReportAllocs()
-    b.ResetTimer()
+    for i := 0; i < 30; i++ {
+        runtime.GC()
+        var memBefore, memAfter runtime.MemStats
+        runtime.ReadMemStats(&memBefore)
+        start := time.Now()
 
-    for i := 0; i < b.N; i++ {
         ds.RemoveElemento(-79545)
-    }
 
+        tempo += float64(time.Since(start).Microseconds())
+        runtime.ReadMemStats(&memAfter)
+        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+
+        ds.AddIndice(0, -79545)
+    }
+    return memoria/30, tempo/30
 }
 
 // Testes de RemoveIndice no pior caso (remover no indice 0)
-func BenchmarkRemoveIndiceArray(b *testing.B) {
+func RemoveIndiceArray() (float64, float64) {
+    var tempo float64
+    var memoria float64
 
-    b.ReportAllocs()
-    b.ResetTimer()
-
-    for i := 0; i < b.N; i++ {
+    for i := 0; i < 30; i++ {
+        runtime.GC()
+        var memBefore, memAfter runtime.MemStats
+        runtime.ReadMemStats(&memBefore)
+        start := time.Now()
 
         da.RemoveIndice(0)
 
-        b.StopTimer()
+        tempo += float64(time.Since(start).Microseconds())
+        runtime.ReadMemStats(&memAfter)
+        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+
         da.AddIndice(0, -79545)
-        b.StartTimer()
     }
+    return memoria/30, tempo/30
 }
 
-func BenchmarkRemoveIndiceSlice(b *testing.B) {
+func RemoveIndiceSlice() (float64, float64) {
+    var tempo float64
+    var memoria float64
 
-    b.ReportAllocs()
-    b.ResetTimer()
-
-    for i := 0; i < b.N; i++ {
+    for i := 0; i < 30; i++ {
+        runtime.GC()
+        var memBefore, memAfter runtime.MemStats
+        runtime.ReadMemStats(&memBefore)
+        start := time.Now()
 
         ds.RemoveIndice(0)
 
-        b.StopTimer()
+        tempo += float64(time.Since(start).Microseconds())
+        runtime.ReadMemStats(&memAfter)
+        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+
         ds.AddIndice(0, -79545)
-        b.StartTimer()
     }
+    return memoria/30, tempo/30
 }
