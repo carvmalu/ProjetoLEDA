@@ -27,17 +27,17 @@ func main() {
 		numeros = append(numeros, temp)
 	}
 
-    // Tamanhos de entrada
+	// Tamanhos de entrada
 	entradas := []int{10000, 30000, 50000, 100000}
 
-    // Funções/Benchmarks que serão testadas
-	funcoes := []func() (float64, float64) {AdicionaIndiceArray, BuscaArray,
-                                            RemoveElementoArray, RemoveIndiceArray,
-                                            AdicionaIndiceSlice, BuscaSlice,
-                                            RemoveElementoSlice, RemoveIndiceSlice}
+	// Funções/Benchmarks que serão testadas
+	funcoes := []func() (float64, float64){adicaoIndiceArray, buscaArray,
+		remocaoValorArray, remocaoIndiceArray,
+		adicaoIndiceSlice, buscaSlice,
+		remocaoValorSlice, remocaoIndiceSlice}
 
-    // Armazenando os resultados
-	data := [][]string {{"Linguagem_Tipo", "Tamanho", "Operacao", "Tempo(ms)", "Memoria(bytes)"}}
+	// Armazenando os resultados
+	data := [][]string{{"Linguagem_Tipo", "Tamanho", "Operacao", "Tempo(ms)", "Memoria(bytes)"}}
 
 	for _, n := range entradas {
 		da = DynamicArray{n, n, numeros[:n]}
@@ -78,11 +78,11 @@ func benchmarkFormat(f func() (float64, float64)) []string {
 	funcao := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 	nomeFunc := strings.Split(funcao, ".")
 
-    operacao := nomeFunc[len(nomeFunc)-1]
-    operacao = strings.ReplaceAll(operacao, "Array", "")
-    operacao = strings.ReplaceAll(operacao, "Slice", "")
+	operacao := nomeFunc[len(nomeFunc)-1]
+	operacao = strings.ReplaceAll(operacao, "Array", "")
+	operacao = strings.ReplaceAll(operacao, "Slice", "")
 
-	dados := []string{operacao, fmt.Sprintf("%.3f", tempo / 1e3), fmt.Sprintf("%.0f", memoria)}
+	dados := []string{operacao, fmt.Sprintf("%.3f", tempo/1e3), fmt.Sprintf("%.0f", memoria)}
 
 	return dados
 }

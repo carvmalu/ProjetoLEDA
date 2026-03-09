@@ -1,7 +1,7 @@
 // Implementação de uma lista dinâmica com lógica de array.
 package main
 
-var defaultCapacity = 1000
+var defaultCapacity = 10
 
 type DynamicArray struct {
 	Size     int
@@ -53,8 +53,6 @@ func (da *DynamicArray) AddIndice(indice int, element int) {
 		da.Size++
 	}
 }
-
-
 
 // Move os elementos para a esquerda.
 func (da *DynamicArray) shiftLeft(indice int) {

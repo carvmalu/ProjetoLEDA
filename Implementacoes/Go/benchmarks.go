@@ -7,171 +7,171 @@ import (
 )
 
 // Testes de AddIndice no pior caso (adicionar no índice 0)
-func AdicionaIndiceArray() (float64, float64){
-    var tempo float64
-    var memoria float64
-    
-    for i := 0; i < 30; i++ {
+func adicaoIndiceArray() (float64, float64) {
+	var tempo float64
+	var memoria float64
 
-        runtime.GC()
-        var memBefore, memAfter runtime.MemStats
-        runtime.ReadMemStats(&memBefore)
-        start := time.Now()
-        
-        da.AddIndice(0, 824)
+	for i := 0; i < 300; i++ {
 
-        tempo += float64(time.Since(start).Microseconds())
-        runtime.ReadMemStats(&memAfter)
-        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+		runtime.GC()
+		var memBefore, memAfter runtime.MemStats
+		runtime.ReadMemStats(&memBefore)
+		start := time.Now()
 
-        da.RemoveIndice(0)
-    }
-    return memoria/30, tempo/30
+		da.AddIndice(0, 824)
+
+		tempo += float64(time.Since(start).Microseconds())
+		runtime.ReadMemStats(&memAfter)
+		memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+
+		da.RemoveIndice(0)
+	}
+	return memoria / 300, tempo / 300
 }
 
-func AdicionaIndiceSlice() (float64, float64) {
-    var tempo float64
-    var memoria float64
-    
-    for i := 0; i < 30; i++ {
+func adicaoIndiceSlice() (float64, float64) {
+	var tempo float64
+	var memoria float64
 
-        runtime.GC()
-        var memBefore, memAfter runtime.MemStats
-        runtime.ReadMemStats(&memBefore)
-        start := time.Now()
+	for i := 0; i < 300; i++ {
 
-        ds.AddIndice(0, 824)
+		runtime.GC()
+		var memBefore, memAfter runtime.MemStats
+		runtime.ReadMemStats(&memBefore)
+		start := time.Now()
 
-        tempo += float64(time.Since(start).Microseconds())
-        runtime.ReadMemStats(&memAfter)
-        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+		ds.AddIndice(0, 824)
 
-        ds.RemoveIndice(0)
-    }
-    return memoria/30, tempo/30
+		tempo += float64(time.Since(start).Microseconds())
+		runtime.ReadMemStats(&memAfter)
+		memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+
+		ds.RemoveIndice(0)
+	}
+	return memoria / 300, tempo / 300
 }
 
 // Teste de Search no pior caso (elemento não existente no slice)
-func BuscaArray() (float64, float64) {
-    var tempo float64
-    var memoria float64
+func buscaArray() (float64, float64) {
+	var tempo float64
+	var memoria float64
 
-    for i := 0; i < 30; i++ {
-        runtime.GC()
-        var memBefore, memAfter runtime.MemStats
-        runtime.ReadMemStats(&memBefore)
-        start := time.Now()
+	for i := 0; i < 300; i++ {
+		runtime.GC()
+		var memBefore, memAfter runtime.MemStats
+		runtime.ReadMemStats(&memBefore)
+		start := time.Now()
 
-        da.Search(7)
+		da.Search(7)
 
-        tempo += float64(time.Since(start).Microseconds())
-        runtime.ReadMemStats(&memAfter)
-        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
-    }
-    return memoria/30, tempo/30
+		tempo += float64(time.Since(start).Microseconds())
+		runtime.ReadMemStats(&memAfter)
+		memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+	}
+	return memoria / 300, tempo / 300
 }
 
-func BuscaSlice() (float64, float64) {
-    var tempo float64
-    var memoria float64
+func buscaSlice() (float64, float64) {
+	var tempo float64
+	var memoria float64
 
-    for i := 0; i < 30; i++ {
-        runtime.GC()
-        var memBefore, memAfter runtime.MemStats
-        runtime.ReadMemStats(&memBefore)
-        start := time.Now()
+	for i := 0; i < 300; i++ {
+		runtime.GC()
+		var memBefore, memAfter runtime.MemStats
+		runtime.ReadMemStats(&memBefore)
+		start := time.Now()
 
-        ds.Search(7)
+		ds.Search(7)
 
-        tempo += float64(time.Since(start).Microseconds())
-        runtime.ReadMemStats(&memAfter)
-        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
-    }
-    return memoria/30, tempo/30
+		tempo += float64(time.Since(start).Microseconds())
+		runtime.ReadMemStats(&memAfter)
+		memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+	}
+	return memoria / 300, tempo / 300
 }
 
 // Teste de RemoveElement no pior caso (elemento não existe no slice)
-func RemoveElementoArray() (float64, float64) {
-    var tempo float64
-    var memoria float64
+func remocaoValorArray() (float64, float64) {
+	var tempo float64
+	var memoria float64
 
-    for i := 0; i < 30; i++ {
-        runtime.GC()
-        var memBefore, memAfter runtime.MemStats
-        runtime.ReadMemStats(&memBefore)
-        start := time.Now()
+	for i := 0; i < 300; i++ {
+		runtime.GC()
+		var memBefore, memAfter runtime.MemStats
+		runtime.ReadMemStats(&memBefore)
+		start := time.Now()
 
-        da.RemoveElemento(-79545)
+		da.RemoveElemento(-79545)
 
-        tempo += float64(time.Since(start).Microseconds())
-        runtime.ReadMemStats(&memAfter)
-        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+		tempo += float64(time.Since(start).Microseconds())
+		runtime.ReadMemStats(&memAfter)
+		memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
 
-        da.AddIndice(0, -79545)
-    }
-    return memoria/30, tempo/30
+		da.AddIndice(0, -79545)
+	}
+	return memoria / 300, tempo / 300
 }
 
-func  RemoveElementoSlice() (float64, float64) {
-    var tempo float64
-    var memoria float64
+func remocaoValorSlice() (float64, float64) {
+	var tempo float64
+	var memoria float64
 
-    for i := 0; i < 30; i++ {
-        runtime.GC()
-        var memBefore, memAfter runtime.MemStats
-        runtime.ReadMemStats(&memBefore)
-        start := time.Now()
+	for i := 0; i < 300; i++ {
+		runtime.GC()
+		var memBefore, memAfter runtime.MemStats
+		runtime.ReadMemStats(&memBefore)
+		start := time.Now()
 
-        ds.RemoveElemento(-79545)
+		ds.RemoveElemento(-79545)
 
-        tempo += float64(time.Since(start).Microseconds())
-        runtime.ReadMemStats(&memAfter)
-        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+		tempo += float64(time.Since(start).Microseconds())
+		runtime.ReadMemStats(&memAfter)
+		memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
 
-        ds.AddIndice(0, -79545)
-    }
-    return memoria/30, tempo/30
+		ds.AddIndice(0, -79545)
+	}
+	return memoria / 300, tempo / 300
 }
 
 // Testes de RemoveIndice no pior caso (remover no indice 0)
-func RemoveIndiceArray() (float64, float64) {
-    var tempo float64
-    var memoria float64
+func remocaoIndiceArray() (float64, float64) {
+	var tempo float64
+	var memoria float64
 
-    for i := 0; i < 30; i++ {
-        runtime.GC()
-        var memBefore, memAfter runtime.MemStats
-        runtime.ReadMemStats(&memBefore)
-        start := time.Now()
+	for i := 0; i < 300; i++ {
+		runtime.GC()
+		var memBefore, memAfter runtime.MemStats
+		runtime.ReadMemStats(&memBefore)
+		start := time.Now()
 
-        da.RemoveIndice(0)
+		da.RemoveIndice(0)
 
-        tempo += float64(time.Since(start).Microseconds())
-        runtime.ReadMemStats(&memAfter)
-        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+		tempo += float64(time.Since(start).Microseconds())
+		runtime.ReadMemStats(&memAfter)
+		memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
 
-        da.AddIndice(0, -79545)
-    }
-    return memoria/30, tempo/30
+		da.AddIndice(0, -79545)
+	}
+	return memoria / 300, tempo / 300
 }
 
-func RemoveIndiceSlice() (float64, float64) {
-    var tempo float64
-    var memoria float64
+func remocaoIndiceSlice() (float64, float64) {
+	var tempo float64
+	var memoria float64
 
-    for i := 0; i < 30; i++ {
-        runtime.GC()
-        var memBefore, memAfter runtime.MemStats
-        runtime.ReadMemStats(&memBefore)
-        start := time.Now()
+	for i := 0; i < 300; i++ {
+		runtime.GC()
+		var memBefore, memAfter runtime.MemStats
+		runtime.ReadMemStats(&memBefore)
+		start := time.Now()
 
-        ds.RemoveIndice(0)
+		ds.RemoveIndice(0)
 
-        tempo += float64(time.Since(start).Microseconds())
-        runtime.ReadMemStats(&memAfter)
-        memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
+		tempo += float64(time.Since(start).Microseconds())
+		runtime.ReadMemStats(&memAfter)
+		memoria += float64(memAfter.TotalAlloc - memBefore.TotalAlloc)
 
-        ds.AddIndice(0, -79545)
-    }
-    return memoria/30, tempo/30
+		ds.AddIndice(0, -79545)
+	}
+	return memoria / 300, tempo / 300
 }
