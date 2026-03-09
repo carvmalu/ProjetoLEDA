@@ -1,13 +1,12 @@
-#include <algorithm> // Para std::copy e std::move
+#ifndef ARRAYLISTNM_HPP
+#define ARRAYLISTNM_HPP
+#include <algorithm>
 
 class ArrayListNM {
 private:
     int* list;
     int capacity;
     int size;
-
-    bool isFull() { return size == capacity; }
-
     void resize() {
         int newCapacity = (capacity == 0) ? 1 : capacity * 2;
         int* newList = new int[newCapacity];
@@ -17,26 +16,13 @@ private:
         capacity = newCapacity;
     }
 
-    void shiftRight(int idx) {
-        // std::move_backward é ideal para deslocar elementos para a direita
-        std::move_backward(list + idx, list + size, list + size + 1);
-    }
-
 public:
-    ArrayListNM(int initialCapacity) {
-        list = new int[initialCapacity];
-        capacity = initialCapacity;
-        size = 0;
-    }
-
+    ArrayListNM(int cap) : size(0), capacity(cap) { list = new int[capacity]; }
     ~ArrayListNM() { delete[] list; }
-
-    void add(int idx, int element) {
-        if (idx >= 0 && idx <= size) {
-            if (isFull()) resize();
-            shiftRight(idx);
-            list[idx] = element;
-            size++;
-        }
-    }
+    void add(int val) { if (size == capacity) resize(); list[size++] = val; }
+    void addInicio(int val) { if (size == capacity) resize(); std::move_backward(list, list + size, list + size + 1); list[0] = val; size++; }
+    int search(int val) { int* it = std::find(list, list + size, val); return (it != list + size) ? std::distance(list, it) : -1; }
+    void removeByIndex(int idx) { if (idx >= 0 && idx < size) { std::copy(list + idx + 1, list + size, list + idx); size--; } }
+    void removeByValue(int val) { int idx = search(val); if (idx != -1) removeByIndex(idx); }
 };
+#endif
