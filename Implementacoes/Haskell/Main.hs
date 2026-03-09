@@ -52,7 +52,7 @@ executarBuscas v (x:xs) = do
     let _ = V.findIndex x v
     executarBuscas v xs
 
--- Teste 2: adição de elemento(inicio e fim) 
+-- Teste 2: adição de elemento
 testeAdicaoInicio :: [Int] -> Int -> IO (Double, Integer)
 testeAdicaoInicio dados totalElementos = 
     medirTempoMemoria totalElementos $ do
@@ -62,7 +62,6 @@ testeAdicaoInicio dados totalElementos =
             loop !v (x:xs) = loop (V.cons x v) xs
         _ <- loop V.empty dados
         return ()
-
 
 -- Teste 3: remoção de elemento (indice e valor) 
 testeRemoveIndice :: V.Vector Int -> Int -> Int -> IO (Double, Integer)
@@ -78,9 +77,10 @@ executarRemoveIndice v n
     | otherwise = executarRemoveIndice (V.removeAt 0 v) (n - 1)
 
 testeRemoveValor :: V.Vector Int -> Int -> Int -> IO (Double, Integer)
-testeRemoveValor v numRemocoes totalElementos = do
-    let primeiroElemento = if V.null v then 0 else V.head v
+testeRemoveValor v numRemocoes totalElementos = 
     medirTempoMemoria totalElementos (executarRemoveValor v primeiroElemento numRemocoes)
+  where
+    primeiroElemento = if V.null v then 0 else V.head v
 
 -- Função recursiva
 executarRemoveValor :: V.Vector Int -> Int -> Int -> IO ()
@@ -90,13 +90,13 @@ executarRemoveValor v valor n
     | otherwise = executarRemoveValor (V.removeFirst valor v) valor (n - 1)
 
 -- Gerar CSV com tempo e memória
-gerarCSV :: [(String, Double, Integer)] -> String
-gerarCSV resultados = 
-    "Linguagem_Tipo, tamanho, Operacao, Tempo(ms), Memoria(bytes)" ++
-    unlines [ printf "%s,%.2f,%d" op tempo mem 
-            | (op, tempo, mem) <- resultados ]
+gerarCSV :: Int -> [(String, String, String, Double, Integer)] -> String
+gerarCSV totalElementos resultados = 
+    "Linguagem_Tipo,Tamanho,Operacao,Tempo(ms),Memoria(bytes)\n" ++
+    unlines [ printf "Haskell_dataVector,%d,%s,%.2f,%d" totalElementos op tempo mem 
+            | (_, _, op, tempo, mem) <- resultados ]
 
-rodarTestes :: [Int] -> String -> Int -> IO [(String, Double, Integer)]
+rodarTestes :: [Int] -> String -> Int -> IO [(String, String, String, Double, Integer)]
 rodarTestes dados nomeArquivo totalElementos = do
     hPutStrLn stderr $ "\n>>> Iniciando testes com " ++ show totalElementos ++ " elementos..."
     
@@ -105,8 +105,8 @@ rodarTestes dados nomeArquivo totalElementos = do
     
     hPutStrLn stderr $ "    Operações por teste: " ++ show numOps
     
-    hPutStrLn stderr "    Rodando: Busca por valor inexistente..."
-    let valoresBusca = map (\i -> 999999999 + i) [0..numOps-1]
+    hPutStrLn stderr "    Rodando: Busca por valor 7..."
+    let valoresBusca = replicate numOps 7
     (tempoBuscaValor, memBuscaValor) <- testeBuscaPorValor vetorTeste valoresBusca totalElementos
     
     hPutStrLn stderr "    Rodando: Adição no início..."
@@ -119,30 +119,22 @@ rodarTestes dados nomeArquivo totalElementos = do
     (tempoRemoveValor, memRemoveValor) <- testeRemoveValor vetorTeste (min 100 numOps) totalElementos
     
     let resultados = 
-            [ ("Haskell_dataVector", n,"busca", tempoBuscaValor, memBuscaValor)
-            , ("Haskell_dataVector", n,"adicaoInicio", tempoAdicaoInicio, memAdicaoInicio)
-            , ("Haskell_dataVector", n,"remocaoIndice", tempoRemoveIndice, memRemoveIndice)
-            , ("Haskell_dataVector", n,"remocaoValor", tempoRemoveValor, memRemoveValor)
+            [ ("Haskell_dataVector", show totalElementos, "busca", tempoBuscaValor, memBuscaValor)
+            , ("Haskell_dataVector", show totalElementos, "adicaoInicio", tempoAdicaoInicio, memAdicaoInicio)
+            , ("Haskell_dataVector", show totalElementos, "remocaoIndice", tempoRemoveIndice, memRemoveIndice)
+            , ("Haskell_dataVector", show totalElementos, "remocaoValor", tempoRemoveValor, memRemoveValor)
             ]
     
-    let csv = gerarCSV resultados
-    writeFile ("Resultados/" ++ nomeArquivo) csv
-    
-    hPutStrLn stderr $ "    ✅ Resultado salvo em: Resultados/" ++ nomeArquivo
+    let csv = gerarCSV totalElementos resultados
+    writeFile ("Resultados/Haskell/" ++ nomeArquivo) csv
     
     return resultados
 
 -- MAIN
 main :: IO ()
 main = do
-    putStrLn ""
-    putStrLn "╔════════════════════════════════════════════════════════════════╗"
-    putStrLn "║                  TESTES DE PERFORMANCE ARRAYLIST                ║"
-    putStrLn "║                   Rodando: 10k, 30k, 50k, 100k                  ║"
-    putStrLn "╚════════════════════════════════════════════════════════════════╝"
-    putStrLn ""
     
-    hPutStrLn stderr "=== INICIANDO TESTES HASKELL ==="
+    hPutStrLn stderr "Iniciando testes"
     
     hPutStrLn stderr $ "Lendo arquivo: " ++ arquivoEntrada
     todosDados <- lerArquivoEntrada arquivoEntrada Nothing
@@ -159,24 +151,14 @@ main = do
         rodarTestes dados arquivo tam
         ) tamanhos
     
-    putStrLn ""
-    putStrLn "╔════════════════════════════════════════════════════════════════╗"
-    putStrLn "║                    TODOS OS TESTES CONCLUÍDOS! ✅               ║"
-    putStrLn "╚════════════════════════════════════════════════════════════════╝"
-    putStrLn ""
-    putStrLn "📊 RESUMO DOS RESULTADOS"
-    putStrLn "════════════════════════════════════════════════════════════════"
-    putStrLn ""
+    hPutStrLn stderr "Testes finalizados"
     
     putStrLn (printf "%-30s %12s %12s %12s %12s" 
-        "Operação" "10k (ms)" "30k (ms)" "50k (ms)" "100k (ms)")
-    putStrLn "────────────────────────────────────────────────────────────────"
-    
-    let allOps = ["busca", "adicaoInicio", 
-                  "remocaoIndice", "remocaoValor"]
+        "Operação" "10k (ms)" "30k (ms)" "50k (ms)" "100k (ms)")    
+    let allOps = ["busca", "adicaoInicio", "remocaoIndice", "remocaoValor"]
     
     mapM_ (\op -> do
-        let tempos = map (\(operacao, tempo, memoria) -> if operacao == op then tempo else 0) (concat todoResultados)
+        let tempos = map (\(_, _, operacao, tempo, _) -> if operacao == op then tempo else 0) (concat todoResultados)
         
         case tempos of
             [t1, t2, t3, t4] -> 
@@ -186,12 +168,9 @@ main = do
         ) allOps
     
     putStrLn ""
-    putStrLn "📁 Arquivos CSV gerados:"
+    putStrLn "Onde está guardado cada resultado:"
     putStrLn "   - Resultados/resultados_10k.csv"
     putStrLn "   - Resultados/resultados_30k.csv"
     putStrLn "   - Resultados/resultados_50k.csv"
     putStrLn "   - Resultados/resultados_100k.csv"
-    putStrLn ""
-    putStrLn "Para visualizar um arquivo:"
-    putStrLn "   cat Resultados/resultados_10k.csv"
     putStrLn ""
