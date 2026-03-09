@@ -3,86 +3,133 @@
 #include <chrono>
 #include <fstream>
 #include <sys/resource.h>
-#include <sys/stat.h> 
+#include <map>
+#include <string>
 #include "ArrayListF.hpp"
 #include "ArrayListNM.hpp"
 
 using namespace std;
 using namespace std::chrono;
 
-// Medição de memória RSS em Bytes (Linux)
-long get_mem() { 
-    struct rusage u; 
-    getrusage(RUSAGE_SELF, &u); 
-    return u.ru_maxrss * 1024; 
+// Estruturas para acumular estatísticas (médias)
+struct Stats {
+    double somaTempo = 0.0;
+    long long somaMem = 0;
+    long long count = 0;
+};
+
+struct Chave {
+    string tipo;
+    int n;
+    string op;
+
+    bool operator<(const Chave& other) const {
+        if (tipo != other.tipo) return tipo < other.tipo;
+        if (n != other.n) return n < other.n;
+        return op < other.op;
+    }
+};
+
+// Captura memória RSS em Bytes no Linux
+long get_memory_usage() {
+    struct rusage usage;
+    getrusage(RUSAGE_SELF, &usage);
+    return usage.ru_maxrss * 1024; 
 }
 
-void rodar_teste_rapido(int n, ofstream& f, string tipo) {
-    const int target = 7; 
+void run_test(int n, ofstream& csv, string tipo, map<Chave, Stats>& estatisticas) {
+    const int target = 7; // Valor que não existe para pior caso
 
-    for (int r = 0; r < 30; r++) {
-        if (tipo == "CPP_ArrayManual") {
-            ArrayListF l(n + 5); 
-            for(int i = 0; i < n; i++) l.add(i);
+    // Setup: Criar e popular a lista
+    ArrayListF* listF = nullptr;
+    ArrayListNM* listNM = nullptr;
 
-            auto s1 = high_resolution_clock::now(); l.addInicio(999); auto e1 = high_resolution_clock::now();
-            f << tipo << "," << n << ",adicaoInicio," << duration<double, milli>(e1-s1).count() << "," << get_mem() << "\n";
+    if (tipo == "CPP_ArrayManual") {
+        listF = new ArrayListF(n + 1);
+        for(int i = 1; i <= n; i++) listF->add(i);
+    } else {
+        listNM = new ArrayListNM(n + 1);
+        for(int i = 1; i <= n; i++) listNM->add(i);
+    }
 
-            auto s2 = high_resolution_clock::now(); l.add(888); auto e2 = high_resolution_clock::now();
-            f << tipo << "," << n << ",adicaoFinal," << duration<double, milli>(e2-s2).count() << "," << get_mem() << "\n";
+    auto medir = [&](string op, auto func) {
+        auto start = high_resolution_clock::now();
+        func();
+        auto end = high_resolution_clock::now();
 
-            auto s3 = high_resolution_clock::now(); l.search(target); auto e3 = high_resolution_clock::now();
-            f << tipo << "," << n << ",busca," << duration<double, milli>(e3-s3).count() << "," << get_mem() << "\n";
+        double tempo = duration<double, milli>(end - start).count();
+        long long memoria = get_memory_usage();
 
-            auto s4 = high_resolution_clock::now(); l.removeByValue(target); auto e4 = high_resolution_clock::now();
-            f << tipo << "," << n << ",remocaoValor," << duration<double, milli>(e4-s4).count() << "," << get_mem() << "\n";
+        // REMOVA A LINHA ABAIXO (ela que cria as milhões de linhas)
+        // csv << tipo << "," << n << "," << op << "," << tempo << "," << memoria << "\n";
 
-            auto s5 = high_resolution_clock::now(); l.removeByIndex(0); auto e5 = high_resolution_clock::now();
-            f << tipo << "," << n << ",remocaoIndice," << duration<double, milli>(e5-s5).count() << "," << get_mem() << "\n";
+        // Mantenha apenas o acúmulo das estatísticas
+        Chave chave{tipo, n, op};
+        auto& st = estatisticas[chave];
+        st.somaTempo += tempo;
+        st.somaMem += memoria;
+        st.count += 1;
+    };
 
-        } else {
-            ArrayListNM l(n + 5); 
-            for(int i = 0; i < n; i++) l.add(i);
-
-            auto s1 = high_resolution_clock::now(); l.addInicio(999); auto e1 = high_resolution_clock::now();
-            f << tipo << "," << n << ",adicaoInicio," << duration<double, milli>(e1-s1).count() << "," << get_mem() << "\n";
-
-            auto s2 = high_resolution_clock::now(); l.add(888); auto e2 = high_resolution_clock::now();
-            f << tipo << "," << n << ",adicaoFinal," << duration<double, milli>(e2-s2).count() << "," << get_mem() << "\n";
-
-            auto s3 = high_resolution_clock::now(); l.search(target); auto e3 = high_resolution_clock::now();
-            f << tipo << "," << n << ",busca," << duration<double, milli>(e3-s3).count() << "," << get_mem() << "\n";
-
-            auto s4 = high_resolution_clock::now(); l.removeByValue(target); auto e4 = high_resolution_clock::now();
-            f << tipo << "," << n << ",remocaoValor," << duration<double, milli>(e4-s4).count() << "," << get_mem() << "\n";
-
-            auto s5 = high_resolution_clock::now(); l.removeByIndex(0); auto e5 = high_resolution_clock::now();
-            f << tipo << "," << n << ",remocaoIndice," << duration<double, milli>(e5-s5).count() << "," << get_mem() << "\n";
-        }
+    if (tipo == "CPP_ArrayManual") {
+        medir("busca", [&](){ listF->search(target); });
+        medir("adicaoInicio", [&](){ listF->addInicio(999); });
+        medir("remocaoIndice", [&](){ listF->removeByIndex(0); });
+        medir("remocaoValor", [&](){ listF->removeByValue(target); });
+        delete listF;
+    } else {
+        medir("busca", [&](){ listNM->search(target); });
+        medir("adicaoInicio", [&](){ listNM->addInicio(999); });
+        medir("remocaoIndice", [&](){ listNM->removeByIndex(0); });
+        medir("remocaoValor", [&](){ listNM->removeByValue(target); });
+        delete listNM;
     }
 }
 
 int main() {
-    // Caminho ajustado para o nome correto
-    ofstream f("../../Resultados/Java/resultadosC++.csv");
-    
-    if (!f.is_open()) {
-        cerr << "Erro fatal: Nao foi possivel criar 'Resultados/resultadosC++.csv'" << endl;
-        cerr << "Certifique-se de que voce tem permissao de escrita na pasta atual." << endl;
-        return 1;
+    ofstream csv("../../Resultados/Cpp/resultadosC++.csv");
+    csv << "Linguagem_Tipo,Tamanho,Operacao,Tempo(ms),Memoria(bytes)\n";
+
+    // mapa para acumular estatísticas e depois gerar médias
+    map<Chave, Stats> estatisticas;
+
+    auto start_global = system_clock::now();
+    auto duration_limit = hours(8);
+
+    cout << "Benchmark iniciado. Rodando por 8 horas..." << endl;
+
+    while (system_clock::now() - start_global < duration_limit) {
+        for (int n : {10000, 30000, 50000}) {
+            run_test(n, csv, "CPP_ArrayManual", estatisticas);
+            run_test(n, csv, "CPP_ArrayNativo", estatisticas);
+            csv.flush(); // Garante gravação em caso de queda de energia
+        }
     }
 
-    f << "Linguagem_Tipo,Tamanho,Operacao,Tempo(ms),Memoria(bytes)\n";
+    csv.close();
 
-    vector<int> tamanhos = {10000, 30000, 50000};
+    // Gera um segundo CSV apenas com as médias
+    ofstream csvMedias("../../Resultados/Cpp/resultadosC++_medias.csv");
+    csvMedias << "Linguagem_Tipo,Tamanho,Operacao,TempoMedio(ms),MemoriaMedia(bytes),Execucoes\n";
 
-    for (int n : tamanhos) {
-        cout << "Executando teste rapido para n = " << n << "..." << endl;
-        rodar_teste_rapido(n, f, "CPP_ArrayManual");
-        rodar_teste_rapido(n, f, "CPP_ArrayNativo");
+    for (const auto& par : estatisticas) {
+        const Chave& chave = par.first;
+        const Stats& st = par.second;
+        if (st.count == 0) continue;
+
+        double tempoMedio = st.somaTempo / st.count;
+        long long memoriaMedia = st.somaMem / st.count;
+
+        csvMedias << chave.tipo << ","
+                  << chave.n << ","
+                  << chave.op << ","
+                  << tempoMedio << ","
+                  << memoriaMedia << ","
+                  << st.count << "\n";
     }
 
-    f.close();
-    cout << "Teste finalizado! Verifique: Resultados/resultadosC++.csv" << endl;
+    csvMedias.close();
+
+    cout << "Fim do teste. Resultados detalhados em resultadosC++.csv e médias em resultadosC++_medias.csv" << endl;
     return 0;
 }
