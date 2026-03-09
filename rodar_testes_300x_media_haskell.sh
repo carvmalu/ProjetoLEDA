@@ -26,9 +26,9 @@ soma_rem_valor_100k=0
 
 echo "Rodando 300 testes para pegar a média"
 
-for i in {1..300}; do
-    if [ $((i % 30)) -eq 0 ]; then
-        echo "Execução $i de 300..."
+for i in {1..1000000}; do
+    if [ $((i % 50000)) -eq 0 ]; then
+        echo "Execução $i de 100000..."
     fi
     
     ./main_haskell 2>/dev/null
@@ -73,25 +73,25 @@ done
 echo "Finalizado a execução vamos calcular as médias..."
 
 # Calcular médias com 2 casas decimais
-media_busca_10k=$(echo "scale=2; $soma_busca_10k / 300" | bc)
-media_add_inicio_10k=$(echo "scale=2; $soma_add_inicio_10k / 300" | bc)
-media_rem_indice_10k=$(echo "scale=2; $soma_rem_indice_10k / 300" | bc)
-media_rem_valor_10k=$(echo "scale=2; $soma_rem_valor_10k / 300" | bc)
+media_busca_10k=$(echo "scale=2; $soma_busca_10k / 1000000" | bc)
+media_add_inicio_10k=$(echo "scale=2; $soma_add_inicio_10k / 1000000" | bc)
+media_rem_indice_10k=$(echo "scale=2; $soma_rem_indice_10k / 1000000" | bc)
+media_rem_valor_10k=$(echo "scale=2; $soma_rem_valor_10k / 1000000" | bc)
 
-media_busca_30k=$(echo "scale=2; $soma_busca_30k / 300" | bc)
-media_add_inicio_30k=$(echo "scale=2; $soma_add_inicio_30k / 300" | bc)
-media_rem_indice_30k=$(echo "scale=2; $soma_rem_indice_30k / 300" | bc)
-media_rem_valor_30k=$(echo "scale=2; $soma_rem_valor_30k / 300" | bc)
+media_busca_30k=$(echo "scale=2; $soma_busca_30k / 1000000" | bc)
+media_add_inicio_30k=$(echo "scale=2; $soma_add_inicio_30k / 1000000" | bc)
+media_rem_indice_30k=$(echo "scale=2; $soma_rem_indice_30k / 1000000" | bc)
+media_rem_valor_30k=$(echo "scale=2; $soma_rem_valor_30k / 1000000" | bc)
 
-media_busca_50k=$(echo "scale=2; $soma_busca_50k / 300" | bc)
-media_add_inicio_50k=$(echo "scale=2; $soma_add_inicio_50k / 300" | bc)
-media_rem_indice_50k=$(echo "scale=2; $soma_rem_indice_50k / 300" | bc)
-media_rem_valor_50k=$(echo "scale=2; $soma_rem_valor_50k / 300" | bc)
+media_busca_50k=$(echo "scale=2; $soma_busca_50k / 1000000" | bc)
+media_add_inicio_50k=$(echo "scale=2; $soma_add_inicio_50k / 1000000" | bc)
+media_rem_indice_50k=$(echo "scale=2; $soma_rem_indice_50k / 1000000" | bc)
+media_rem_valor_50k=$(echo "scale=2; $soma_rem_valor_50k / 1000000" | bc)
 
-media_busca_100k=$(echo "scale=2; $soma_busca_100k / 300" | bc)
-media_add_inicio_100k=$(echo "scale=2; $soma_add_inicio_100k / 300" | bc)
-media_rem_indice_100k=$(echo "scale=2; $soma_rem_indice_100k / 300" | bc)
-media_rem_valor_100k=$(echo "scale=2; $soma_rem_valor_100k / 300" | bc)
+media_busca_100k=$(echo "scale=2; $soma_busca_100k / 1000000" | bc)
+media_add_inicio_100k=$(echo "scale=2; $soma_add_inicio_100k / 1000000" | bc)
+media_rem_indice_100k=$(echo "scale=2; $soma_rem_indice_100k / 1000000" | bc)
+media_rem_valor_100k=$(echo "scale=2; $soma_rem_valor_100k / 1000000" | bc)
 
 # Função para formatar números (adicionar 0 antes de . se necessário)
 format_number() {
@@ -111,7 +111,7 @@ media_busca_100k=$(format_number "$media_busca_100k")
 echo "Salvando resultados em Resultados/Haskell/..."
 
 # Salvar para 10k
-cat > Resultados/Haskell/media_300x_10k.csv << CSV
+cat > Resultados/Haskell/media_1000000x_10k.csv << CSV
 Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)
 Haskell_dataVector,10000,busca,$media_busca_10k,80056
 Haskell_dataVector,10000,adicaoInicio,$media_add_inicio_10k,80056
@@ -120,7 +120,7 @@ Haskell_dataVector,10000,remocaoValor,$media_rem_valor_10k,80056
 CSV
 
 # Salvar para 30k
-cat > Resultados/Haskell/media_300x_30k.csv << CSV
+cat > Resultados/Haskell/media_1000000x_30k.csv << CSV
 Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)
 Haskell_dataVector,30000,busca,$media_busca_30k,240056
 Haskell_dataVector,30000,adicaoInicio,$media_add_inicio_30k,240056
@@ -129,7 +129,7 @@ Haskell_dataVector,30000,remocaoValor,$media_rem_valor_30k,240056
 CSV
 
 # Salvar para 50k
-cat > Resultados/Haskell/media_300x_50k.csv << CSV
+cat > Resultados/Haskell/media_1000000x_50k.csv << CSV
 Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)
 Haskell_dataVector,50000,busca,$media_busca_50k,400056
 Haskell_dataVector,50000,adicaoInicio,$media_add_inicio_50k,400056
@@ -138,7 +138,7 @@ Haskell_dataVector,50000,remocaoValor,$media_rem_valor_50k,400056
 CSV
 
 # Salvar para 100k
-cat > Resultados/Haskell/media_300x_100k.csv << CSV
+cat > Resultados/Haskell/media_1000000x_100k.csv << CSV
 Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)
 Haskell_dataVector,100000,busca,$media_busca_100k,800056
 Haskell_dataVector,100000,adicaoInicio,$media_add_inicio_100k,800056
@@ -147,19 +147,19 @@ Haskell_dataVector,100000,remocaoValor,$media_rem_valor_100k,800056
 CSV
 
 echo ""
-echo "Médias de 300 execuções foram salvas em Resultados/Haskell/"
+echo "Médias de 1000000 execuções foram salvas em Resultados/Haskell/"
 echo ""
 echo "10k:"
-cat Resultados/Haskell/media_300x_10k.csv
+cat Resultados/Haskell/media_1000000x_10k.csv
 echo ""
 echo "30k:"
-cat Resultados/Haskell/media_300x_30k.csv
+cat Resultados/Haskell/media_1000000x_30k.csv
 echo ""
 echo "50k:"
-cat Resultados/Haskell/media_300x_50k.csv
+cat Resultados/Haskell/media_1000000x_50k.csv
 echo ""
 echo "100k:"
-cat Resultados/Haskell/media_300x_100k.csv
+cat Resultados/Haskell/media_1000000x_100k.csv
 EOF
 
 chmod +x ~/ProjetoLEDA/ProjetoLEDA/rodar_testes_300x_final.sh
