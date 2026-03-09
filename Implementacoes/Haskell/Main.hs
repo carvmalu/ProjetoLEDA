@@ -63,15 +63,6 @@ testeAdicaoInicio dados totalElementos =
         _ <- loop V.empty dados
         return ()
 
-testeAdicaoFinal :: [Int] -> Int -> IO (Double, Integer)
-testeAdicaoFinal dados totalElementos = 
-    medirTempoMemoria totalElementos $ do
-        let loop !v [] = 
-                let len = V.length v
-                in len `seq` return v
-            loop !v (x:xs) = loop (V.snoc v x) xs
-        _ <- loop V.empty dados
-        return ()
 
 -- Teste 3: remoção de elemento (indice e valor) 
 testeRemoveIndice :: V.Vector Int -> Int -> Int -> IO (Double, Integer)
@@ -101,7 +92,7 @@ executarRemoveValor v valor n
 -- Gerar CSV com tempo e memória
 gerarCSV :: [(String, Double, Integer)] -> String
 gerarCSV resultados = 
-    "Operacao,Tempo(ms),Memoria(bytes)\n" ++
+    "Linguagem_Tipo, tamanho, Operacao, Tempo(ms), Memoria(bytes)" ++
     unlines [ printf "%s,%.2f,%d" op tempo mem 
             | (op, tempo, mem) <- resultados ]
 
@@ -121,9 +112,6 @@ rodarTestes dados nomeArquivo totalElementos = do
     hPutStrLn stderr "    Rodando: Adição no início..."
     (tempoAdicaoInicio, memAdicaoInicio) <- testeAdicaoInicio (take numOps dados) totalElementos
     
-    hPutStrLn stderr "    Rodando: Adição no final..."
-    (tempoAdicaoFinal, memAdicaoFinal) <- testeAdicaoFinal (take numOps dados) totalElementos
-    
     hPutStrLn stderr "    Rodando: Remoção por índice..."
     (tempoRemoveIndice, memRemoveIndice) <- testeRemoveIndice vetorTeste (min 100 numOps) totalElementos
     
@@ -131,11 +119,10 @@ rodarTestes dados nomeArquivo totalElementos = do
     (tempoRemoveValor, memRemoveValor) <- testeRemoveValor vetorTeste (min 100 numOps) totalElementos
     
     let resultados = 
-            [ ("busca", tempoBuscaValor, memBuscaValor)
-            , ("adicaoInicio", tempoAdicaoInicio, memAdicaoInicio)
-            , ("adicaoFinal", tempoAdicaoFinal, memAdicaoFinal)
-            , ("remocaoIndice", tempoRemoveIndice, memRemoveIndice)
-            , ("remocaoValor", tempoRemoveValor, memRemoveValor)
+            [ ("Haskell_dataVector", n,"busca", tempoBuscaValor, memBuscaValor)
+            , ("Haskell_dataVector", n,"adicaoInicio", tempoAdicaoInicio, memAdicaoInicio)
+            , ("Haskell_dataVector", n,"remocaoIndice", tempoRemoveIndice, memRemoveIndice)
+            , ("Haskell_dataVector", n,"remocaoValor", tempoRemoveValor, memRemoveValor)
             ]
     
     let csv = gerarCSV resultados
@@ -185,7 +172,7 @@ main = do
         "Operação" "10k (ms)" "30k (ms)" "50k (ms)" "100k (ms)")
     putStrLn "────────────────────────────────────────────────────────────────"
     
-    let allOps = ["busca", "adicaoInicio", "adicaoFinal", 
+    let allOps = ["busca", "adicaoInicio", 
                   "remocaoIndice", "remocaoValor"]
     
     mapM_ (\op -> do
