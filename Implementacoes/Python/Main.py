@@ -26,12 +26,11 @@ def read_data(filepath, max_n):
 
 
 # ---------- MEDIÇÃO DE TEMPO ----------
-def measure_time(func, runs=30, setup=None, restore=None):
+def measure_time(func, runs, restore=None):
 
     total = 0
     gc.disable()
     for run in range(runs):
-        if setup: setup()
         gc.collect()
         start = time.perf_counter()
         func()
@@ -44,13 +43,12 @@ def measure_time(func, runs=30, setup=None, restore=None):
 
 
 # ---------- MEDIÇÃO DE MEMÓRIA ----------
-def measure_memory(func, runs=300, setup=None, restore=None):
+def measure_memory(func, runs, restore=None):
 
     total = 0
     tracemalloc.start()
     gc.disable()
     for run in range(runs):
-        if setup:setup()
         gc.collect()
         tracemalloc.reset_peak()
         func()
@@ -68,9 +66,10 @@ def main():
     input_file = sys.argv[1]
     path = sys.argv[2]
     sizes = [int(x) for x in sys.argv[3].split(",")]
+    runs = int(sys.argv[4])
 
     os.makedirs(path, exist_ok=True)
-    output_path = os.path.join(path, "PythonResults.csv")
+    output_path = os.path.join(path, "resultados.csv")
     max_size = max(sizes)
     data = read_data(input_file, max_size)
 
@@ -110,22 +109,22 @@ def main():
                 
 
                  # ---------- INSERÇÃO ----------
-                t_manual_add = measure_time(insert_manual, restore=restore_manual_add)
-                m_manual_add = measure_memory(insert_manual, restore=restore_manual_add)
+                t_manual_add = measure_time(insert_manual, runs, restore=restore_manual_add)
+                m_manual_add = measure_memory(insert_manual, runs, restore=restore_manual_add)
                 w.write(f"Python_ArrayManual,{n},adicaoIndice,{t_manual_add:.3f},{m_manual_add}\n")
 
-                t_native_add = measure_time(insert_native, restore=restore_native_add)
-                m_native_add = measure_memory(insert_native, restore=restore_native_add)
+                t_native_add = measure_time(insert_native, runs, restore=restore_native_add)
+                m_native_add = measure_memory(insert_native, runs, restore=restore_native_add)
                 w.write(f"Python_ArrayNativo,{n},adicaoIndice,{t_native_add:.3f},{m_native_add}\n")
 
 
                 # ---------- BUSCA (pior caso -> valor não existe na lista)  ----------
-                t_manual_search = measure_time(lambda: list_manual.search(search_target))
-                m_manual_search = measure_memory(lambda: list_manual.search(search_target))
+                t_manual_search = measure_time(lambda: list_manual.search(search_target), runs,)
+                m_manual_search = measure_memory(lambda: list_manual.search(search_target), runs,)
                 w.write(f"Python_ArrayManual,{n},busca,{t_manual_search:.3f},{m_manual_search}\n")
 
-                t_native_search = measure_time(lambda: list_native.search(search_target))
-                m_native_search = measure_memory(lambda: list_native.search(search_target))
+                t_native_search = measure_time(lambda: list_native.search(search_target), runs,)
+                m_native_search = measure_memory(lambda: list_native.search(search_target), runs,)
                 w.write(f"Python_ArrayNativo,{n},busca,{t_native_search:.3f},{m_native_search}\n")
 
 
@@ -143,22 +142,22 @@ def main():
                 list_native.add_index_element(0, remove_target)
 
                 # Remoção por valor (search + shiftLeft em teste - ciclo de adiicona target -> remove -> recomeça)
-                t_manual_remove = measure_time(lambda: list_manual.removePorElement(remove_target), restore=restore_manual)
-                m_manual_remove = measure_memory(lambda: list_manual.removePorElement(remove_target), restore=restore_manual)
+                t_manual_remove = measure_time(lambda: list_manual.removePorElement(remove_target), runs, restore=restore_manual)
+                m_manual_remove = measure_memory(lambda: list_manual.removePorElement(remove_target), runs, restore=restore_manual)
                 w.write(f"Python_ArrayManual,{n},remocaoValor,{t_manual_remove:.3f},{m_manual_remove}\n")
 
-                t_native_remove = measure_time(lambda: list_native.remove_Element(remove_target), restore=restore_native)
-                m_native_remove = measure_memory(lambda: list_native.remove_Element(remove_target), restore=restore_native)
+                t_native_remove = measure_time(lambda: list_native.remove_Element(remove_target), runs, restore=restore_native)
+                m_native_remove = measure_memory(lambda: list_native.remove_Element(remove_target), runs, restore=restore_native)
                 w.write(f"Python_ArrayNativo,{n},remocaoValor,{t_native_remove:.3f},{m_native_remove}\n")
 
 
                 # Remoção por índice (shiftLeft em teste - ciclo de adiicona target -> remove -> recomeça)
-                t_manual_remove = measure_time(lambda: list_manual.removePorindex(0), restore=restore_manual)
-                m_manual_remove = measure_memory(lambda: list_manual.removePorindex(0), restore=restore_manual)
+                t_manual_remove = measure_time(lambda: list_manual.removePorindex(0), runs, restore=restore_manual)
+                m_manual_remove = measure_memory(lambda: list_manual.removePorindex(0), runs, restore=restore_manual)
                 w.write(f"Python_ArrayManual,{n},remocaoIndice,{t_manual_remove:.3f},{m_manual_remove}\n")
 
-                t_native_remove = measure_time(lambda: list_native.remove_index(0), restore=restore_native)
-                m_native_remove = measure_memory(lambda: list_native.remove_index(0), restore=restore_native)
+                t_native_remove = measure_time(lambda: list_native.remove_index(0), runs, restore=restore_native)
+                m_native_remove = measure_memory(lambda: list_native.remove_index(0), runs, restore=restore_native)
                 w.write(f"Python_ArrayNativo,{n},remocaoIndice,{t_native_remove:.3f},{m_native_remove}\n")
 
 
