@@ -1,12 +1,23 @@
+// Exemplo de comando: go -C run . Implementacoes/Go input/entrada.txt Resultados/ 10000,30000,50000,100000 10000
+// Estrutura do comando: 
+// go -C run . (para executar o go)
+// Implementacoes/Go (caminho para os arquivos .go)
+// input/entrada (caminho da raiz até o arquivo de entrada)
+// Resultados/ (caminho da raiz até a pasta do arquivo .csv)
+// 10000,30000,50000,100000 (tamanhos de entrada separados por ",")
+// 10000 (número de runs)
+
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"log"
 	"os"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -16,19 +27,43 @@ var ds DynamicSlice
 
 func main() {
 
-	// Aramazena os valores passados no input em um slice
-	var temp int
+	// Recebendo os argumentos da linha de comando
+	args := os.Args
 
-	for {
-		_, err := fmt.Scan(&temp)
+	// Armazenando a entrada em uma lista
+	entrada := fmt.Sprintf("../../" + args[1])
+	arquivo, err := os.Open(entrada)
+	if err != nil {
+		fmt.Println("Erro ao abrir arquivo:", err)
+		return
+	}
+	defer arquivo.Close()
+
+	scanner := bufio.NewScanner(arquivo)
+	scanner.Split(bufio.ScanWords)
+
+	for scanner.Scan() {
+		n, err := strconv.Atoi(scanner.Text())
 		if err != nil {
-			break
+			fmt.Println("Erro de conversão:", err)
+			return
 		}
-		numeros = append(numeros, temp)
+		numeros = append(numeros, n)
 	}
 
-	// Tamanhos de entrada
-	entradas := []int{10000, 30000, 50000, 100000}
+	// Definindo arquivo de saída
+	saida := args[2]
+
+	// Recebendo os tamanhos de entrada
+	tamanhos := strings.Split(args[3], ",")
+
+	// Recebendo o número de runs
+	run, err := strconv.Atoi(args[4])
+	if err != nil {
+		fmt.Println("Erro na conversão:", err)
+		return
+	}
+	runs = run
 
 	// Funções/Benchmarks que serão testadas
 	funcoes := []func() (float64, float64){adicaoIndiceArray, buscaArray,
@@ -39,22 +74,25 @@ func main() {
 	// Armazenando os resultados
 	data := [][]string{{"Linguagem_Tipo", "Tamanho", "Operacao", "Tempo(ms)", "Memoria(bytes)"}}
 
-	for _, n := range entradas {
-		da = DynamicArray{n, n, numeros[:n]}
-		for _, f := range funcoes[:4] {
-			data = append(data, append([]string{"Go_DynamicArray", fmt.Sprintf("%d", n)}, benchmarkFormat(f)...))
+	// Executa as funções de cálculo de tempo de execução e memória
+	for _, n := range tamanhos {
+		num, err := strconv.Atoi(n)
+		if err != nil {
+			fmt.Println("Erro na conversão:", err)
+			return
 		}
-	}
-
-	for _, n := range entradas {
-		ds = DynamicSlice{numeros[:n]}
+		da = DynamicArray{num, num, numeros[:num]}
+		for _, f := range funcoes[:4] {
+			data = append(data, append([]string{"Go_DynamicArray", fmt.Sprintf(n)}, benchmarkFormat(f)...))
+		}
+		ds = DynamicSlice{numeros[:num]}
 		for _, f := range funcoes[4:] {
-			data = append(data, append([]string{"Go_DynamicSlice", fmt.Sprintf("%d", n)}, benchmarkFormat(f)...))
+			data = append(data, append([]string{"Go_DynamicSlice", fmt.Sprintf(n)}, benchmarkFormat(f)...))
 		}
 	}
 
 	// Cria ou atualiza o arquivo go.csv
-	file, err := os.Create("../../Resultados/go.csv")
+	file, err := os.Create("../../" + saida + "/go.csv")
 	if err != nil {
 		log.Fatalf("Erro ao criar arquivo: %s", err)
 	}
