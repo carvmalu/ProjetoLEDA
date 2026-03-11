@@ -2,7 +2,7 @@ import java.util.*;
 import java.io.*;
 
 //https://blog.formacao.dev/manipulacao-de-arquivos-csv-em-java-leitura-e-escrita/
-// Comando na raiz do projeto:  java -cp Implementacoes/Java Main input/entrada.txt Resultados/Java/ 10000,30000,50000,100000
+// Comando na raiz do projeto:  java -cp Implementacoes/Java Main input/entrada.txt Resultados/Java/ 10000,30000,50000,100000 30
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -11,7 +11,6 @@ public class Main {
         String inputFile = args[0]; 
         String path = args[1];  
         String outputFile = "JavaResults.csv";
-        int RUNS = 30;
         
         //Aquecimento.
         ArrayListF warmupF = new ArrayListF(10);
@@ -25,6 +24,7 @@ public class Main {
         Runner r = new Runner(inputFile, 100000);
         int[] data = r.getData();
         int[] sizes = r.readString(args[2]);
+        int RUNS = Integer.parseInt(args[3]);
 
         try (PrintWriter w = new PrintWriter(new FileWriter(path + "/" + outputFile))) {
             w.println("Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)");
@@ -95,25 +95,24 @@ public class Main {
 
                     sumMNRemVal += r.measureRemoveNativeMemory(listNative, num);
                     listNative.add(0, (currentData[n - 1]));
-                }
+                } // fecha for RUNS
 
                 // Escrevendo médias.
-                w.println("Java_ArrayListManual," + n + ",adicaoInicio," + (sumTFAdd / RUNS) + "," + (sumMFAdd / RUNS));
-                w.println("Java_ArrayListBuildIn," + n + ",adicaoInicio," + (sumTNAdd / RUNS) + "," + (sumMNAdd / RUNS));
+                w.println("Java_ArrayListManual," + n + ",adicaoInicio," + String.format("%.3f", (sumTFAdd / RUNS)) + "," + (sumMFAdd / RUNS));
+                w.println("Java_ArrayListBuildIn," + n + ",adicaoInicio," + String.format("%.3f", (sumTNAdd / RUNS)) + "," + (sumMNAdd / RUNS));
+                w.println("Java_ArrayListManual," + n + ",busca," + String.format("%.3f", (sumTFSearch / RUNS)) + "," + (sumMFSearch / RUNS));
+                w.println("Java_ArrayListBuildIn," + n + ",busca," + String.format("%.3f", (sumTNSearch / RUNS)) + "," + (sumMNSearch / RUNS));
+                w.println("Java_ArrayListManual," + n + ",remocaoIndice," + String.format("%.3f", (sumTFRemIdx / RUNS)) + "," + (sumMFRemIdx / RUNS));
+                w.println("Java_ArrayListBuildIn," + n + ",remocaoIndice," + String.format("%.3f", (sumTNRemIdx / RUNS)) + "," + (sumMNRemIdx / RUNS));
+                w.println("Java_ArrayListManual," + n + ",remocaoValor," + String.format("%.3f", (sumTFRemVal / RUNS)) + "," + (sumMFRemVal / RUNS));
+                w.println("Java_ArrayListBuildIn," + n + ",remocaoValor," + String.format("%.3f", (sumTNRemVal / RUNS)) + "," + (sumMNRemVal / RUNS));
 
-                w.println("Java_ArrayListManual," + n + ",busca," + (sumTFSearch / RUNS) + "," + (sumMFSearch / RUNS));
-                w.println("Java_ArrayListBuildIn," + n + ",busca," + (sumTNSearch / RUNS) + "," + (sumMNSearch / RUNS));
+            } // fecha for sizes
 
-                w.println("Java_ArrayListManual," + n + ",remocaoIndice," + (sumTFRemIdx / RUNS) + "," + (sumMFRemIdx / RUNS));
-                w.println("Java_ArrayListBuildIn," + n + ",remocaoIndice," + (sumTNRemIdx / RUNS) + "," + (sumMNRemIdx / RUNS));
-
-                w.println("Java_ArrayListManual," + n + ",remocaoValor," + (sumTFRemVal / RUNS) + "," + (sumMFRemVal / RUNS));
-                w.println("Java_ArrayListBuildIn," + n + ",remocaoValor," + (sumTNRemVal / RUNS) + "," + (sumMNRemVal / RUNS));
-            }
-        
         } catch (Exception e) {
             System.err.println("Erro " + e.getMessage());
             e.printStackTrace();
         }
+        
     }
 }
