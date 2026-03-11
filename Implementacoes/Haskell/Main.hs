@@ -7,8 +7,9 @@ import System.CPUTime (getCPUTime)
 import System.Mem (performGC)
 import System.IO (writeFile, readFile, hPutStrLn, stderr)
 import Text.Printf (printf)
+import System.Environment (getArgs)
 import qualified Data.List as L
-
+import Control.Monad
 import qualified Implementacoes.Haskell.ArrayList as V
 
 -- Caminhos para pegar as entradas e destinar a saída
@@ -133,44 +134,50 @@ rodarTestes dados nomeArquivo totalElementos = do
 -- MAIN
 main :: IO ()
 main = do
+    args <- getArgs
     
-    hPutStrLn stderr "Iniciando testes"
+    if null args
+        then do
+            putStrLn "Uso: ./main_haskell <tamanho1> <tamanho2> ... <numVezes>"
+            putStrLn "Exemplo: ./main_haskell 10000 30000 50000 100000 10"
+        else do
+            let tamanhos = map read (init args) :: [Int]
+            let numVezes = read (last args) :: Int
+            
+            hPutStrLn stderr "Iniciando testes"
+            hPutStrLn stderr $ "Lendo arquivo: " ++ arquivoEntrada
+            todosDados <- lerArquivoEntrada arquivoEntrada Nothing
+            let totalDisponivel = length todosDados
+            hPutStrLn stderr $ "Total de elementos disponíveis: " ++ show totalDisponivel
+            
+            resultadosAcumulados <- replicateM numVezes $ do
+                mapM (\tam -> do
+                    let arquivo = "resultados_" ++ show tam ++ "k.csv"
+                    let dados = take tam todosDados
+                    rodarTestes dados arquivo tam
+                    ) tamanhos
+
+            let todasAsSomas = concat (concat resultadosAcumulados)
+            let operacoes = ["busca", "adicaoInicio", "remocaoIndice", "remocaoValor"]
+
+            mapM_ (\tam -> do
+                let resultadosPorTamanho = filter (\(_, _, _, _, _) -> True) todasAsSomas
+                let nomeArquivoMedia = "media_" ++ show tam ++ "k.csv"
+                
+                let csv = "Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)\n" ++
+                          unlines [printf "Haskell_dataVector,%d,%s,%.2f,%d" tam op 
+                                   (somarTempos tam op todasAsSomas / fromIntegral numVezes)
+                                   (calcularMemoria tam)
+                                  | op <- operacoes]
+                
+                writeFile ("Resultados/Haskell/" ++ nomeArquivoMedia) csv
+                ) tamanhos
+            
+            hPutStrLn stderr "Testes finalizados"
     
-    hPutStrLn stderr $ "Lendo arquivo: " ++ arquivoEntrada
-    todosDados <- lerArquivoEntrada arquivoEntrada Nothing
-    let totalDisponivel = length todosDados
-    hPutStrLn stderr $ "Total de elementos disponíveis: " ++ show totalDisponivel
-    
-    let tamanhos = [(10000, "resultados_10k.csv")
-                   ,(30000, "resultados_30k.csv")
-                   ,(50000, "resultados_50k.csv")
-                   ,(100000, "resultados_100k.csv")]
-    
-    todoResultados <- mapM (\(tam, arquivo) -> do
-        let dados = take tam todosDados
-        rodarTestes dados arquivo tam
-        ) tamanhos
-    
-    hPutStrLn stderr "Testes finalizados"
-    
-    putStrLn (printf "%-30s %12s %12s %12s %12s" 
-        "Operação" "10k (ms)" "30k (ms)" "50k (ms)" "100k (ms)")    
-    let allOps = ["busca", "adicaoInicio", "remocaoIndice", "remocaoValor"]
-    
-    mapM_ (\op -> do
-        let tempos = map (\(_, _, operacao, tempo, _) -> if operacao == op then tempo else 0) (concat todoResultados)
-        
-        case tempos of
-            [t1, t2, t3, t4] -> 
-                putStrLn (printf "%-30s %12.2f %12.2f %12.2f %12.2f" 
-                    op t1 t2 t3 t4)
-            _ -> return ()
-        ) allOps
-    
-    putStrLn ""
-    putStrLn "Onde está guardado cada resultado:"
-    putStrLn "   - Resultados/resultados_10k.csv"
-    putStrLn "   - Resultados/resultados_30k.csv"
-    putStrLn "   - Resultados/resultados_50k.csv"
-    putStrLn "   - Resultados/resultados_100k.csv"
-    putStrLn ""
+somarTempos :: Int -> String -> [(String, String, String, Double, Integer)] -> Double
+somarTempos tam op resultados = 
+    sum [tempo | (_, _, operacao, tempo, _) <- resultados, operacao == op]
+
+calcularMemoria :: Int -> Integer
+calcularMemoria n = toInteger (56 + (n * 8))
