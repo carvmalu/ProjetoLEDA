@@ -1,5 +1,0 @@
-Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)
-Haskell_dataVector,100000,busca,0.01,800056
-Haskell_dataVector,100000,adicaoInicio,69.70,800056
-Haskell_dataVector,100000,remocaoIndice,2305.62,800056
-Haskell_dataVector,100000,remocaoValor,1365.40,800056
