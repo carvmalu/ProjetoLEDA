@@ -170,28 +170,28 @@ main = do
 
             hPutStrLn logHandle "Calculando médias..."
             hFlush logHandle
-            
             mapM_ (\tam -> do
                 let nomeArquivoMedia = "media_" ++ show tam ++ "k.csv"
                 
                 let csv = "Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)\n" ++
                           unlines [printf "Haskell_dataVector,%d,%s,%.2f,%s" tam op 
-                                   (somarTempos tam op todasAsSomas / fromIntegral numVezes)
-                                   (show (somarMemoria tam op todasAsSomas `div` fromIntegral numVezes))
-                                  | op <- operacoes]
+                                   (somarTemposComTam tam op todasAsSomas / fromIntegral numVezes)
+                                   (show (somarMemoriaComTam tam op todasAsSomas `div` fromIntegral numVezes))
+                                   | op <- operacoes]
                 
                 writeFile ("Resultados/Haskell/" ++ nomeArquivoMedia) csv
-                hPutStrLn logHandle $ "Média salva em: " ++ nomeArquivoMedia
+                hPutStrLn logHandle $ "Média salva: " ++ nomeArquivoMedia
                 hFlush logHandle
                 ) tamanhos
             
             hPutStrLn logHandle "Testes finalizados"
             hClose logHandle
-    
-somarTempos :: Int -> String -> [(String, String, String, Double, Integer)] -> Double
-somarTempos tam op resultados = 
-    sum [tempo | (_, _, operacao, tempo, _) <- resultados, operacao == op]
+somarTemposComTam :: Int -> String -> [(String, String, String, Double, Integer)] -> Double
+somarTemposComTam tam op resultados = 
+    sum [tempo | (_, tamStr, operacao, tempo, _) <- resultados, 
+         operacao == op && read tamStr == tam]
 
-somarMemoria :: Int -> String -> [(String, String, String, Double, Integer)] -> Integer
-somarMemoria tam op resultados = 
-    sum [mem | (_, _, operacao, _, mem) <- resultados, operacao == op]
+somarMemoriaComTam :: Int -> String -> [(String, String, String, Double, Integer)] -> Integer
+somarMemoriaComTam tam op resultados = 
+    sum [mem | (_, tamStr, operacao, _, mem) <- resultados, 
+         operacao == op && read tamStr == tam] 
