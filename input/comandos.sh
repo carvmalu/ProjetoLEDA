@@ -5,4 +5,4 @@
 
 cd Implementacoes/Go && go run . < ../../input/entrada.txt && cd ../..
 java -cp Implementacoes/java Main input/entrada.txt Resultados/10000,30000,50000,100000
-python Implementacoes/Python/Main.py input/entrada.txt Resultados/Python 10000,30000,50000,100000 1000000
+python Implementacoes/Python/Main.py input/entrada.txt Resultados/Python 10000,30000,50000,100000 100000
