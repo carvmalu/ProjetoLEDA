@@ -1,4 +1,4 @@
-// Exemplo de comando: go -C Implementacoes/Go run . input/entrada.txt Resultados/ 10000,30000,50000,100000 10000
+// Exemplo de comando: go -C Implementacoes/Go run . input/entrada.txt Resultados/Go/ 10000,30000,50000,100000 10000
 // Estrutura do comando: 
 // go -C run . (para executar os arquivos .go)
 // Implementacoes/Go (caminho da raiz até os arquivos .go)
