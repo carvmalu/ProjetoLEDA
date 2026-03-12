@@ -15,7 +15,7 @@ public class Main {
         //Aquecimento.
         ArrayListF warmupF = new ArrayListF(10);
         ArrayList<Integer> warmupNative = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) { 
+        for (int i = 0; i < 100; i++) { 
             warmupF.add(0, i); 
             warmupNative.add(0, i); }
         warmupF.search(500); warmupNative.contains(500);

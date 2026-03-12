@@ -34,7 +34,7 @@ public class Runner {
         return sizes;
     }
 
-    // CORREÇÃO: sem System.gc() aqui — não deve rodar depois da operação.
+
     private long getUsedMemory() {
         Runtime runtime = Runtime.getRuntime();
         return runtime.totalMemory() - runtime.freeMemory();
@@ -85,7 +85,7 @@ public class Runner {
 
     //Inserção.
     public long measureAddMemory(ArrayListF list, int element){
-        System.gc(); // CORREÇÃO: gc() apenas antes, para limpar o heap antes da medição.
+        System.gc(); 
         long beforeUsedMem = getUsedMemory();
         list.add(0, element);
         long afterUsedMem = getUsedMemory();
@@ -93,7 +93,7 @@ public class Runner {
     }
     
     public long measureAddNativeMemory(ArrayList<Integer> list, int element){
-        System.gc(); // CORREÇÃO: gc() apenas antes, para limpar o heap antes da medição.
+        System.gc();
         long beforeUsedMem = getUsedMemory();
         list.add(0, element);
         long afterUsedMem = getUsedMemory();
