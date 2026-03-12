@@ -43,17 +43,15 @@ public class Runner {
     //Métodos auxiliares para o treinamento (cada um retorna o tempo).
     
     //Inserção.
-    public double measureAdd(ArrayListF list, int[] data) {
+    public double measureAdd(ArrayListF list, int element) {
         long start = System.nanoTime();
-        for (int i = 0; i < data.length; i++) 
-            list.add(0, data[i]);
+        list.add(0, element);
         return (System.nanoTime() - start) / 1_000_000.0;
     }
 
-    public double measureAddNative(ArrayList<Integer> list, int[] data) {
+    public double measureAddNative(ArrayList<Integer> list, int element) {
         long start = System.nanoTime();
-        for (int i = 0; i < data.length; i++) 
-            list.add(0, data[i]);
+        list.add(0, element);
         return (System.nanoTime() - start) / 1_000_000.0;
     }
 
@@ -86,20 +84,18 @@ public class Runner {
     //Métodos auxiliares para medir consumo de memória.
 
     //Inserção.
-    public long measureAddMemory(ArrayListF list, int[] data){
+    public long measureAddMemory(ArrayListF list, int element){
         System.gc(); // CORREÇÃO: gc() apenas antes, para limpar o heap antes da medição.
         long beforeUsedMem = getUsedMemory();
-        for (int i = 0; i < data.length; i++) 
-            list.add(0, data[i]);       
+        list.add(0, element);
         long afterUsedMem = getUsedMemory();
         return (afterUsedMem - beforeUsedMem);
     }
     
-    public long measureAddNativeMemory(ArrayList<Integer> list, int[] data){
+    public long measureAddNativeMemory(ArrayList<Integer> list, int element){
         System.gc(); // CORREÇÃO: gc() apenas antes, para limpar o heap antes da medição.
         long beforeUsedMem = getUsedMemory();
-        for (int i = 0; i < data.length; i++) 
-            list.add(0, data[i]);
+        list.add(0, element);
         long afterUsedMem = getUsedMemory();
         return (afterUsedMem - beforeUsedMem);
     }

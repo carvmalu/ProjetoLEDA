@@ -46,21 +46,32 @@ public class Main {
 
                 double sumTFRemVal = 0, sumTNRemVal = 0;
                 long sumMFRemVal = 0, sumMNRemVal = 0;
+                
+                // Criando as Listas.
+                ArrayListF listF = new ArrayListF(10);
+                    for (int k = 0; k < n; k++) listF.add(k, currentData[k]);
+ 
+                ArrayList<Integer> listNative = new ArrayList<>();
+                    for (int k = 0; k < n; k++) listNative.add(k, currentData[k]);
 
                 for (int run = 0; run < RUNS; run++) {
-
+                    //Log para acompanhar o progresso.
+                    if(run % (Math.max(1, RUNS / 10)) == 0)
+                        System.out.printf("  [N=%6d] %5.1f%% concluido (run %d/%d)%n", 
+                            n, (run * 100.0 / RUNS), run, RUNS);
                     // Inserção.
-                    ArrayListF listF = new ArrayListF(10);
-                    sumTFAdd += r.measureAdd(listF, currentData);
+                    sumTFAdd += r.measureAdd(listF, currentData[0]);
+                    listF.remove(0);
 
-                    ArrayList<Integer> listNative = new ArrayList<>();
-                    sumTNAdd += r.measureAddNative(listNative, currentData);
+                   
+                    sumTNAdd += r.measureAddNative(listNative, currentData[0]);
+                    listNative.remove(0);
 
-                    listF = new ArrayListF(10);
-                    sumMFAdd += r.measureAddMemory(listF, currentData);
+                    sumMFAdd += r.measureAddMemory(listF, currentData[0]);
+                    listF.remove(0);
 
-                    listNative = new ArrayList<>();
-                    sumMNAdd += r.measureAddNativeMemory(listNative, currentData);
+                    sumMNAdd += r.measureAddNativeMemory(listNative, currentData[0]);
+                    listNative.remove(0);
 
                     // Search.
                     Integer num = Integer.valueOf(7);
@@ -95,6 +106,7 @@ public class Main {
 
                     sumMNRemVal += r.measureRemoveNativeMemory(listNative, num);
                     listNative.add(0, (currentData[n - 1]));
+
                 } // fecha for RUNS
 
                 // Escrevendo médias.
