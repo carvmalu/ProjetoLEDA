@@ -173,8 +173,6 @@ main = do
             
             mapM_ (\tam -> do
                 let nomeArquivoMedia = "media_" ++ show tam ++ "k.csv"
-                let resultadosPorTamanho = [r | rs <- resultadosAcumulados, r <- rs, let (_, _, _, _, _) = r, 
-                                            let (_, _, _, _, _) = r]
                 
                 let csv = "Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)\n" ++
                           unlines [printf "Haskell_dataVector,%d,%s,%.2f,%s" tam op 
@@ -183,7 +181,7 @@ main = do
                                   | op <- operacoes]
                 
                 writeFile ("Resultados/Haskell/" ++ nomeArquivoMedia) csv
-                ) tamanhosa
+                hPutStrLn logHandle $ "Média salva: " ++ nomeArquivoMedia
                 hFlush logHandle
                 ) tamanhos
             
