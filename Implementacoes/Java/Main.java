@@ -107,7 +107,7 @@ public class Main {
                     sumMNRemVal += r.measureRemoveNativeMemory(listNative, num);
                     listNative.add(0, (currentData[n - 1]));
 
-                } // fecha for RUNS
+                } 
 
                 // Escrevendo médias.
                 w.println("Java_ArrayListManual," + n + ",adicaoInicio," + String.format("%.3f", (sumTFAdd / RUNS)) + "," + (sumMFAdd / RUNS));
@@ -119,7 +119,7 @@ public class Main {
                 w.println("Java_ArrayListManual," + n + ",remocaoValor," + String.format("%.3f", (sumTFRemVal / RUNS)) + "," + (sumMFRemVal / RUNS));
                 w.println("Java_ArrayListBuildIn," + n + ",remocaoValor," + String.format("%.3f", (sumTNRemVal / RUNS)) + "," + (sumMNRemVal / RUNS));
 
-            } // fecha for sizes
+            } 
 
         } catch (Exception e) {
             System.err.println("Erro " + e.getMessage());
