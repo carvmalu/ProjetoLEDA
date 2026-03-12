@@ -183,15 +183,18 @@ main = do
                 hPutStrLn logHandle $ "Média salva: " ++ nomeArquivoMedia
                 hFlush logHandle
                 ) tamanhos
-            
+
+
             hPutStrLn logHandle "Testes finalizados"
             hClose logHandle
+
 somarTemposComTam :: Int -> String -> [(String, String, String, Double, Integer)] -> Double
 somarTemposComTam tam op resultados = 
-    sum [tempo | (_, tamStr, operacao, tempo, _) <- resultados, 
-         operacao == op && read tamStr == tam]
+    sum [tempo | (_, _, operacao, tempo, _) <- resultados, operacao == op, 
+         read (show tam) == tam]
 
 somarMemoriaComTam :: Int -> String -> [(String, String, String, Double, Integer)] -> Integer
 somarMemoriaComTam tam op resultados = 
-    sum [mem | (_, tamStr, operacao, _, mem) <- resultados, 
-         operacao == op && read tamStr == tam] 
+    sum [mem | (_, _, operacao, _, mem) <- resultados, operacao == op,
+         read (show tam) == tam]
+
