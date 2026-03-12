@@ -1,7 +1,7 @@
-// Exemplo de comando: go -C run . Implementacoes/Go input/entrada.txt Resultados/ 10000,30000,50000,100000 10000
+// Exemplo de comando: go -C Implementacoes/Go run . input/entrada.txt Resultados/ 10000,30000,50000,100000 10000
 // Estrutura do comando: 
-// go -C run . (para executar o go)
-// Implementacoes/Go (caminho para os arquivos .go)
+// go -C run . (para executar os arquivos .go)
+// Implementacoes/Go (caminho da raiz até os arquivos .go)
 // input/entrada (caminho da raiz até o arquivo de entrada)
 // Resultados/ (caminho da raiz até a pasta do arquivo .csv)
 // 10000,30000,50000,100000 (tamanhos de entrada separados por ",")
@@ -83,11 +83,11 @@ func main() {
 		}
 		da = DynamicArray{num, num, numeros[:num]}
 		for _, f := range funcoes[:4] {
-			data = append(data, append([]string{"Go_DynamicArray", fmt.Sprintf(n)}, benchmarkFormat(f)...))
+			data = append(data, append([]string{"Go_ArrayManual", fmt.Sprintf(n)}, benchmarkFormat(f)...))
 		}
 		ds = DynamicSlice{numeros[:num]}
 		for _, f := range funcoes[4:] {
-			data = append(data, append([]string{"Go_DynamicSlice", fmt.Sprintf(n)}, benchmarkFormat(f)...))
+			data = append(data, append([]string{"Go_ArrayNativo", fmt.Sprintf(n)}, benchmarkFormat(f)...))
 		}
 	}
 
