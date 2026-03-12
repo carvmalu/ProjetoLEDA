@@ -1,28 +1,17 @@
 """
-benchmark_charts.py
-Lê CSVs de cada linguagem e gera 8 PNGs:
-  4 benchmarks × (tempo + memória)
- 
-Estrutura de arquivos:
-  Resultados/Cpp/resultadosC++_medias.csv
-  Resultados/Python/resultados.csv
-  Resultados/Go/go.csv
-  Resultados/Haskell/media_10000k.csv  (30000k, 50000k, 100000k)
-  Resultados/Java/JavaResults.csv
- 
-Execute: python benchmark_charts.py
+Script para gerar gráficos baseados nas benchmarks
+utilizadas no projeto para a comparação da estrutura de dados ArrayList em 
+diferentes linguagens (Python, Go, Haskell, C++ e java).
 """
- 
+
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
- 
-# ─────────────────────────────────────────────────────────────────────────────
-#  CAMINHOS
-# ─────────────────────────────────────────────────────────────────────────────
- 
+
+#  Caminho para obter os arquivos
+
 ARQUIVOS = {
     "CPP":     "Resultados/Cpp/resultadosC++_medias.csv",
     "Python":  "Resultados/Python/resultados.csv",
@@ -35,20 +24,17 @@ ARQUIVOS = {
     ],
     "Java":    "Resultados/Java/JavaResults.csv",
 }
- 
-# ─────────────────────────────────────────────────────────────────────────────
-#  NORMALIZAÇÃO DE OPERAÇÕES
+
 #  Mapeia qualquer variação encontrada nos CSVs para um nome canônico
-# ─────────────────────────────────────────────────────────────────────────────
- 
+
 OPERACAO_MAP = {
     "adicaoinicio":  "adicaoInicio",
-    "adicaoindice":  "adicaoInicio",   # Python e Go usam este nome
+    "adicaoindice":  "adicaoInicio",  
     "busca":         "busca",
     "remocaoindice": "remocaoIndice",
     "remocaovalor":  "remocaoValor",
 }
- 
+
 OPERACOES    = ["busca", "adicaoInicio", "remocaoIndice", "remocaoValor"]
 TITULOS_OP   = {
     "busca":         "Busca",
@@ -56,22 +42,20 @@ TITULOS_OP   = {
     "remocaoIndice": "Remoção por Índice",
     "remocaoValor":  "Remoção por Valor",
 }
- 
+
 TAMANHOS     = [10000, 30000, 50000, 100000]
 LABELS_TAM   = {10000: "10k", 30000: "30k", 50000: "50k", 100000: "100k"}
- 
-# ─────────────────────────────────────────────────────────────────────────────
-#  SÉRIES E CORES
-# ─────────────────────────────────────────────────────────────────────────────
- 
+
+#  Escolha de séries e cores
+
 SERIES = [
     "CPP_Manual",    "CPP_Nativo",
     "Python_Manual", "Python_Nativo",
     "Go_Manual",     "Go_Nativo",
-    "Java_Nativo",                    # Java só tem BuildIn (Nativo)
+    "Java_Nativo",                    
     "Haskell_Manual",
 ]
- 
+
 CORES = {
     "CPP_Manual":     "#34D399",
     "CPP_Nativo":     "#059669",
@@ -79,10 +63,10 @@ CORES = {
     "Python_Nativo":  "#2563EB",
     "Go_Manual":      "#22D3EE",
     "Go_Nativo":      "#0891B2",
-    "Java_Nativo":    "#F97316",      # Java só tem BuildIn (Nativo)
+    "Java_Nativo":    "#F97316",      
     "Haskell_Manual": "#C084FC",
 }
- 
+
 ESTILO = {
     "fundo_figura": "#0F172A",
     "fundo_eixos":  "#1E293B",
@@ -90,17 +74,16 @@ ESTILO = {
     "grade":        "#334155",
     "borda_eixos":  "#475569",
 }
- 
-# ─────────────────────────────────────────────────────────────────────────────
-#  LEITURA E NORMALIZAÇÃO
-# ─────────────────────────────────────────────────────────────────────────────
- 
+
+#  Normalização
+
+
 def detectar_sep(caminho):
     with open(caminho, "r", encoding="utf-8") as f:
         primeira = f.readline()
     return "," if primeira.count(",") >= primeira.count("\t") else "\t"
- 
- 
+
+
 def normalizar_df(df):
     """Renomeia colunas para nomes canônicos e normaliza operações."""
     col_map = {}
@@ -117,7 +100,7 @@ def normalizar_df(df):
         elif "memori" in low or "memory" in low or "mem" in low:
             col_map[col] = "Memoria_bytes"
     df = df.rename(columns=col_map)
- 
+
     df["Operacao"] = (
         df["Operacao"]
         .str.strip()
@@ -128,8 +111,8 @@ def normalizar_df(df):
     df["Tempo_ms"]      = pd.to_numeric(df["Tempo_ms"],      errors="coerce")
     df["Memoria_bytes"] = pd.to_numeric(df["Memoria_bytes"], errors="coerce")
     return df
- 
- 
+
+
 def extrair_serie_key(linguagem_tipo: str) -> str:
     """
     Converte o campo Linguagem_Tipo para uma chave de série canônica.
@@ -145,42 +128,41 @@ def extrair_serie_key(linguagem_tipo: str) -> str:
       Haskell_dataVector    → Haskell_Manual
     """
     lt = linguagem_tipo.lower()
- 
+
     if lt.startswith("cpp"):       lang = "CPP"
     elif lt.startswith("python"):  lang = "Python"
     elif lt.startswith("go"):      lang = "Go"
     elif lt.startswith("java"):    lang = "Java"
     elif lt.startswith("haskell"): lang = "Haskell"
     else:                          lang = linguagem_tipo.split("_")[0]
- 
+
     if lang == "Haskell":
         return "Haskell_Manual"
- 
-    # "buildin" ou "nativo" → Nativo; qualquer outra coisa → Manual
+
     if "buildin" in lt or "nativo" in lt or "native" in lt or "builtin" in lt:
         impl = "Nativo"
     else:
         impl = "Manual"
- 
+
     return f"{lang}_{impl}"
- 
- 
+
+
 def ler_csv(caminho):
     sep = detectar_sep(caminho)
     df  = pd.read_csv(caminho, sep=sep, engine="python", skipinitialspace=True)
     return normalizar_df(df)
- 
- 
+
+
 def carregar_todos():
     frames = []
     for lang, arq in ARQUIVOS.items():
         arquivos_lista = arq if isinstance(arq, list) else [arq]
         existentes = [a for a in arquivos_lista if os.path.exists(a)]
- 
+
         if not existentes:
             print(f"  ⚠  Arquivo não encontrado para {lang} — omitido dos gráficos.")
             continue
- 
+
         try:
             dfs = []
             for a in existentes:
@@ -194,15 +176,13 @@ def carregar_todos():
             print(f"  ✔  {lang}: {len(df)} linhas | séries: {series_enc}")
         except Exception as e:
             print(f"  ✗  Erro ao ler {lang}: {e}")
- 
+
     if not frames:
         raise RuntimeError("Nenhum CSV carregado.")
     return pd.concat(frames, ignore_index=True)
- 
-# ─────────────────────────────────────────────────────────────────────────────
-#  EXTRAÇÃO DE VALORES
-# ─────────────────────────────────────────────────────────────────────────────
- 
+
+# Extrair valores
+
 def extrair_valores(df, operacao, metrica):
     col = "Tempo_ms" if metrica == "tempo" else "Memoria_bytes"
     sub = df[df["Operacao"] == operacao]
@@ -214,24 +194,22 @@ def extrair_valores(df, operacao, metrica):
             vals.append(float(linha[col].iloc[0]) if not linha.empty else 0.0)
         resultado[serie] = vals
     return resultado
- 
-# ─────────────────────────────────────────────────────────────────────────────
-#  PLOTAGEM
-# ─────────────────────────────────────────────────────────────────────────────
- 
+
+#  Plotagem
+
 def plotar(dados, titulo, ylabel, nome_arquivo):
     series_ativas = [s for s in SERIES if any(v > 0 for v in dados[s])]
- 
+
     n_grupos = len(TAMANHOS)
     n_barras = len(series_ativas)
     largura  = min(0.09, 0.72 / n_barras)
     x        = np.arange(n_grupos)
     offsets  = np.linspace(-(n_barras-1)/2, (n_barras-1)/2, n_barras) * largura
- 
+
     fig, ax = plt.subplots(figsize=(16, 7))
     fig.patch.set_facecolor(ESTILO["fundo_figura"])
     ax.set_facecolor(ESTILO["fundo_eixos"])
- 
+
     for i, serie in enumerate(series_ativas):
         cor     = CORES[serie]
         valores = dados[serie]
@@ -255,7 +233,7 @@ def plotar(dados, titulo, ylabel, nome_arquivo):
                 ha="center", va="bottom",
                 fontsize=5.8, color=cor, fontweight="bold", rotation=90,
             )
- 
+
     ax.set_xticks(x)
     ax.set_xticklabels([LABELS_TAM[t] + " entradas" for t in TAMANHOS],
                        color=ESTILO["texto"], fontsize=12)
@@ -267,24 +245,22 @@ def plotar(dados, titulo, ylabel, nome_arquivo):
         spine.set_edgecolor(ESTILO["borda_eixos"])
     ax.set_title(titulo, fontsize=15, fontweight="bold",
                  color=ESTILO["texto"], pad=18)
- 
+
     patches = [mpatches.Patch(color=CORES[s], label=s.replace("_", " ")) for s in series_ativas]
     leg = ax.legend(handles=patches, loc="upper left", framealpha=0.25,
                     facecolor=ESTILO["fundo_eixos"], edgecolor=ESTILO["borda_eixos"],
                     labelcolor=ESTILO["texto"], fontsize=8.5, ncol=1,
                     title="Linguagem / Implementação", title_fontsize=9)
     leg.get_title().set_color(ESTILO["texto"])
- 
+
     plt.tight_layout(pad=1.8)
     plt.savefig(nome_arquivo, dpi=160, bbox_inches="tight",
                 facecolor=ESTILO["fundo_figura"])
     plt.close()
     print(f"  ✔  {nome_arquivo}")
- 
-# ─────────────────────────────────────────────────────────────────────────────
-#  MAIN
-# ─────────────────────────────────────────────────────────────────────────────
- 
+
+#  Main
+
 METRICAS = [
     ("tempo",   "Tempo (ms)"),
     ("memoria", "Memória (bytes)"),
@@ -295,14 +271,14 @@ SLUGS_OP = {
     "remocaoIndice": "remocao_indice",
     "remocaoValor":  "remocao_valor",
 }
- 
+
 if __name__ == "__main__":
     print("Carregando CSVs...\n")
     df = carregar_todos()
     print(f"\nTotal de linhas: {len(df)}")
     print(f"Operações:  {sorted(df['Operacao'].dropna().unique())}")
     print(f"Séries:     {sorted(df['Serie'].unique())}\n")
- 
+
     print("Gerando gráficos...\n")
     for op in OPERACOES:
         for metrica, ylabel in METRICAS:
@@ -310,3 +286,4 @@ if __name__ == "__main__":
             titulo = f"{TITULOS_OP[op]} — {tipo}"
             arq    = f"benchmark_{SLUGS_OP[op]}_{metrica}.png"
             plotar(extrair_valores(df, op, metrica), titulo, ylabel, arq)
+
