@@ -5,11 +5,13 @@
 
 import System.CPUTime (getCPUTime)
 import System.Mem (performGC)
-import System.IO (writeFile, readFile, hPutStrLn, stderr)
+import System.IO (writeFile, readFile, hPutStrLn, stderr, openFile, IOMode(WriteMode), hFlush, hClose)
 import Text.Printf (printf)
+import System.Environment (getArgs)
 import qualified Data.List as L
-
+import Control.Monad
 import qualified Implementacoes.Haskell.ArrayList as V
+import GHC.Conc (getAllocationCounter, setAllocationCounter)
 
 -- Caminhos para pegar as entradas e destinar a saída
 arquivoEntrada :: String
@@ -18,18 +20,17 @@ arquivoEntrada = "input/entrada.txt"
 caminhoResultados :: String
 caminhoResultados = "Resultados/resultadosHaskell.csv"
 
--- Medir memória e tempo com cálculo correto
+-- Medir memória e tempo
 medirTempoMemoria :: Int -> IO a -> IO (Double, Integer)
 medirTempoMemoria numElementos acao = do
     performGC
+    setAllocationCounter 0
     start <- getCPUTime
     resultado <- acao
     end <- getCPUTime
+    memoriaUsada <- getAllocationCounter
     let tempo = fromIntegral (end - start) / 1e9
-    let memoria = calcularMemoria numElementos
-    return (tempo, memoria)
-  where
-    calcularMemoria n = toInteger (56 + (n * 8))
+    return (tempo, toInteger (abs memoriaUsada))
 
 -- Ler dados do arquivo de entrada
 lerArquivoEntrada :: FilePath -> Maybe Int -> IO [Int]
@@ -93,13 +94,13 @@ executarRemoveValor v valor n
 gerarCSV :: Int -> [(String, String, String, Double, Integer)] -> String
 gerarCSV totalElementos resultados = 
     "Linguagem_Tipo,Tamanho,Operacao,Tempo(ms),Memoria(bytes)\n" ++
-    unlines [ printf "Haskell_dataVector,%d,%s,%.2f,%d" totalElementos op tempo mem 
+    unlines [ printf "Haskell_dataVector,%d,%s,%.2f,%s" totalElementos op tempo (show mem)
             | (_, _, op, tempo, mem) <- resultados ]
 
 rodarTestes :: [Int] -> String -> Int -> IO [(String, String, String, Double, Integer)]
 rodarTestes dados nomeArquivo totalElementos = do
     hPutStrLn stderr $ "\n>>> Iniciando testes com " ++ show totalElementos ++ " elementos..."
-    
+
     let vetorTeste = V.fromList dados
     let numOps = min 1000 (totalElementos `div` 10)
     
@@ -133,44 +134,67 @@ rodarTestes dados nomeArquivo totalElementos = do
 -- MAIN
 main :: IO ()
 main = do
+    args <- getArgs
     
-    hPutStrLn stderr "Iniciando testes"
-    
-    hPutStrLn stderr $ "Lendo arquivo: " ++ arquivoEntrada
-    todosDados <- lerArquivoEntrada arquivoEntrada Nothing
-    let totalDisponivel = length todosDados
-    hPutStrLn stderr $ "Total de elementos disponíveis: " ++ show totalDisponivel
-    
-    let tamanhos = [(10000, "resultados_10k.csv")
-                   ,(30000, "resultados_30k.csv")
-                   ,(50000, "resultados_50k.csv")
-                   ,(100000, "resultados_100k.csv")]
-    
-    todoResultados <- mapM (\(tam, arquivo) -> do
-        let dados = take tam todosDados
-        rodarTestes dados arquivo tam
-        ) tamanhos
-    
-    hPutStrLn stderr "Testes finalizados"
-    
-    putStrLn (printf "%-30s %12s %12s %12s %12s" 
-        "Operação" "10k (ms)" "30k (ms)" "50k (ms)" "100k (ms)")    
-    let allOps = ["busca", "adicaoInicio", "remocaoIndice", "remocaoValor"]
-    
-    mapM_ (\op -> do
-        let tempos = map (\(_, _, operacao, tempo, _) -> if operacao == op then tempo else 0) (concat todoResultados)
-        
-        case tempos of
-            [t1, t2, t3, t4] -> 
-                putStrLn (printf "%-30s %12.2f %12.2f %12.2f %12.2f" 
-                    op t1 t2 t3 t4)
-            _ -> return ()
-        ) allOps
-    
-    putStrLn ""
-    putStrLn "Onde está guardado cada resultado:"
-    putStrLn "   - Resultados/resultados_10k.csv"
-    putStrLn "   - Resultados/resultados_30k.csv"
-    putStrLn "   - Resultados/resultados_50k.csv"
-    putStrLn "   - Resultados/resultados_100k.csv"
-    putStrLn ""
+    if null args
+        then do
+            putStrLn "Uso: ./main_haskell <tamanho1> <tamanho2> ... <numVezes>"
+            putStrLn "Exemplo: ./main_haskell 10000 30000 50000 100000 10"
+        else do
+            let tamanhos = map read (init args) :: [Int]
+            let numVezes = read (last args) :: Int
+            
+            -- Abrir arquivo de log
+            logHandle <- openFile "saida.log" WriteMode
+            
+            hPutStrLn logHandle "Iniciando testes"
+            hPutStrLn logHandle $ "Lendo arquivo: " ++ arquivoEntrada
+            hFlush logHandle
+            
+            todosDados <- lerArquivoEntrada arquivoEntrada Nothing
+            let totalDisponivel = length todosDados
+            hPutStrLn logHandle $ "Total de elementos disponíveis: " ++ show totalDisponivel
+            hFlush logHandle
+            
+            resultadosAcumulados <- forM [1..numVezes] $ \i -> do
+                hPutStrLn logHandle $ "Execução " ++ show i ++ " de " ++ show numVezes ++ "..."
+                hFlush logHandle
+                mapM (\tam -> do
+                    let arquivo = "resultados_" ++ show tam ++ "k.csv"
+                    let dados = take tam todosDados
+                    rodarTestes dados arquivo tam
+                    ) tamanhos
+
+            let todasAsSomas = concat (concat resultadosAcumulados)
+            let operacoes = ["busca", "adicaoInicio", "remocaoIndice", "remocaoValor"]
+
+            hPutStrLn logHandle "Calculando médias..."
+            hFlush logHandle
+            mapM_ (\tam -> do
+                let nomeArquivoMedia = "media_" ++ show tam ++ "k.csv"
+                
+                let csv = "Linguagem_Tipo,Tamanho,Operacao,Tempo_Media(ms),Memoria(bytes)\n" ++
+                          unlines [printf "Haskell_dataVector,%d,%s,%.2f,%s" tam op 
+                                   (somarTemposComTam tam op todasAsSomas / fromIntegral numVezes)
+                                   (show (somarMemoriaComTam tam op todasAsSomas `div` fromIntegral numVezes))
+                                   | op <- operacoes]
+                
+                writeFile ("Resultados/Haskell/" ++ nomeArquivoMedia) csv
+                hPutStrLn logHandle $ "Média salva: " ++ nomeArquivoMedia
+                hFlush logHandle
+                ) tamanhos
+
+
+            hPutStrLn logHandle "Testes finalizados"
+            hClose logHandle
+
+somarTemposComTam :: Int -> String -> [(String, String, String, Double, Integer)] -> Double
+somarTemposComTam tam op resultados = 
+    sum [tempo | (_, _, operacao, tempo, _) <- resultados, operacao == op, 
+         read (show tam) == tam]
+
+somarMemoriaComTam :: Int -> String -> [(String, String, String, Double, Integer)] -> Integer
+somarMemoriaComTam tam op resultados = 
+    sum [mem | (_, _, operacao, _, mem) <- resultados, operacao == op,
+         read (show tam) == tam]
+
