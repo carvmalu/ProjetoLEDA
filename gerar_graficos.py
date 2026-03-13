@@ -1,8 +1,8 @@
 """
-Script para gerar gráficos baseados nas benchmarks
-utilizadas no projeto para a comparação da estrutura de dados ArrayList em 
-diferentes linguagens (Python, Go, Haskell, C++ e java).
-Para rodar: python gerar_graficos.py
+Script para gerar gráficos a respeito da comparação
+da estrutura ArrayList (nativo e manual) em diferentes linguagens.
+Os gráficos estão separados consumo de memória(bytes) e tempo(ms),
+e pelos benchmarks utilizados para a comparação de desempenho. 
 """
 
 import os
@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
-#  Caminho para obter os arquivos
+# Caminhos para extrair
 
 ARQUIVOS = {
     "CPP":     "Resultados/Cpp/resultadosC++_medias.csv",
@@ -26,11 +26,11 @@ ARQUIVOS = {
     "Java":    "Resultados/Java/JavaResults.csv",
 }
 
-#  Mapeia qualquer variação encontrada nos CSVs para um nome canônico
+# Normalização de operações
 
 OPERACAO_MAP = {
     "adicaoinicio":  "adicaoInicio",
-    "adicaoindice":  "adicaoInicio",  
+    "adicaoindice":  "adicaoInicio",   
     "busca":         "busca",
     "remocaoindice": "remocaoIndice",
     "remocaovalor":  "remocaoValor",
@@ -47,13 +47,13 @@ TITULOS_OP   = {
 TAMANHOS     = [10000, 30000, 50000, 100000]
 LABELS_TAM   = {10000: "10k", 30000: "30k", 50000: "50k", 100000: "100k"}
 
-#  Escolha de séries e cores
+# Séries e cores
 
 SERIES = [
     "CPP_Manual",    "CPP_Nativo",
     "Python_Manual", "Python_Nativo",
     "Go_Manual",     "Go_Nativo",
-    "Java_Nativo",                    
+    "Java_Manual",   "Java_Nativo",
     "Haskell_Manual",
 ]
 
@@ -62,9 +62,10 @@ CORES = {
     "CPP_Nativo":     "#059669",
     "Python_Manual":  "#60A5FA",
     "Python_Nativo":  "#2563EB",
-    "Go_Manual":      "#22D3EE",
-    "Go_Nativo":      "#0891B2",
-    "Java_Nativo":    "#F97316",      
+    "Go_Manual":      "#D11261",
+    "Go_Nativo":      "#E26484",
+    "Java_Manual":    "#FB923C",
+    "Java_Nativo":    "#F97316",
     "Haskell_Manual": "#C084FC",
 }
 
@@ -75,9 +76,7 @@ ESTILO = {
     "grade":        "#334155",
     "borda_eixos":  "#475569",
 }
-
-#  Normalização
-
+# normalização
 
 def detectar_sep(caminho):
     with open(caminho, "r", encoding="utf-8") as f:
@@ -182,7 +181,7 @@ def carregar_todos():
         raise RuntimeError("Nenhum CSV carregado.")
     return pd.concat(frames, ignore_index=True)
 
-# Extrair valores
+# extração de valores
 
 def extrair_valores(df, operacao, metrica):
     col = "Tempo_ms" if metrica == "tempo" else "Memoria_bytes"
@@ -196,10 +195,10 @@ def extrair_valores(df, operacao, metrica):
         resultado[serie] = vals
     return resultado
 
-#  Plotagem
+# plotar
 
 def plotar(dados, titulo, ylabel, nome_arquivo):
-    series_ativas = [s for s in SERIES if any(v > 0 for v in dados[s])]
+    series_ativas = SERIES
 
     n_grupos = len(TAMANHOS)
     n_barras = len(series_ativas)
@@ -218,8 +217,8 @@ def plotar(dados, titulo, ylabel, nome_arquivo):
                          color=cor, alpha=0.90, zorder=3)
         for barra, val in zip(barras, valores):
             if val == 0:
-                continue
-            if val < 0.001:
+                label = "0"
+            elif val < 0.001:
                 label = f"{val:.2e}"
             elif val < 0.01:
                 label = f"{val:.4f}"
@@ -227,9 +226,10 @@ def plotar(dados, titulo, ylabel, nome_arquivo):
                 label = f"{val:.3f}"
             else:
                 label = f"{val:.1f}"
+            altura = barra.get_height() if val > 0 else 0
             ax.text(
                 barra.get_x() + barra.get_width() / 2,
-                barra.get_height() * 1.012,
+                altura * 1.012 + (0.002 if val == 0 else 0),
                 label,
                 ha="center", va="bottom",
                 fontsize=5.8, color=cor, fontweight="bold", rotation=90,
@@ -258,9 +258,8 @@ def plotar(dados, titulo, ylabel, nome_arquivo):
     plt.savefig(nome_arquivo, dpi=160, bbox_inches="tight",
                 facecolor=ESTILO["fundo_figura"])
     plt.close()
-    print(f"  ✔  {nome_arquivo}")
 
-#  Main
+# main
 
 METRICAS = [
     ("tempo",   "Tempo (ms)"),
