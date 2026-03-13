@@ -136,13 +136,18 @@ main :: IO ()
 main = do
     args <- getArgs
     
-    if null args
+    if length args < 4
         then do
-            putStrLn "Uso: ./main_haskell <tamanho1> <tamanho2> ... <numVezes>"
-            putStrLn "Exemplo: ./main_haskell 10000 30000 50000 100000 10"
+            putStrLn "Uso: ./main_haskell <caminho> <arquivo> <tamanho1> [tamanho2] ... <numVezes>"
+            putStrLn "Exemplo: ./main_haskell /input entrada.txt 10000 30000 50000 100000 10"
         else do
-            let tamanhos = map read (init args) :: [Int]
-            let numVezes = read (last args) :: Int
+            let caminho = args !! 0
+            let arquivo = args !! 1
+            let argumentos = drop 2 args
+            let numVezes = read (last argumentos) :: Int
+            let tamanhos = map read (init argumentos) :: [Int]
+            
+            let arquivoEntrada = caminho ++ "/" ++ arquivo
             
             -- Abrir arquivo de log
             logHandle <- openFile "saida.log" WriteMode
@@ -160,9 +165,9 @@ main = do
                 hPutStrLn logHandle $ "Execução " ++ show i ++ " de " ++ show numVezes ++ "..."
                 hFlush logHandle
                 mapM (\tam -> do
-                    let arquivo = "resultados_" ++ show tam ++ "k.csv"
+                    let nomeArquivo = "resultados_" ++ show tam ++ "k.csv"
                     let dados = take tam todosDados
-                    rodarTestes dados arquivo tam
+                    rodarTestes dados nomeArquivo tam
                     ) tamanhos
 
             let todasAsSomas = concat (concat resultadosAcumulados)
@@ -183,7 +188,6 @@ main = do
                 hPutStrLn logHandle $ "Média salva: " ++ nomeArquivoMedia
                 hFlush logHandle
                 ) tamanhos
-
 
             hPutStrLn logHandle "Testes finalizados"
             hClose logHandle
