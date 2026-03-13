@@ -2,7 +2,7 @@
 Script para gerar gráficos baseados nas benchmarks
 utilizadas no projeto para a comparação da estrutura de dados ArrayList em 
 diferentes linguagens (Python, Go, Haskell, C++ e java).
-Para rodar: python benchmark_charts.py
+Para rodar: python gerar_graficos.py
 """
 
 import os
