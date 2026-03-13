@@ -95,3 +95,5 @@ Além deste repositório, o projeto também possui um relatório completo de an�
 
 Link do relatório:
 https://docs.google.com/document/d/1AZMmW-bYlDqWOUMPmu8KvXaEFI5ZxfQisdtQT_UZ9nc/edit?tab=t.0
+
+obs: O documento possui uma guia da proposta do plano de experimento inicial. O que foi proposto e ainda não está presente no relatório e no reposítorio pode ser considerado como melhorias futuras para aprimoramento do experimento.
