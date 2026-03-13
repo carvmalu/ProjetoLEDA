@@ -1,6 +1,6 @@
 # Proposta de Projeto
 
-Esse repositório contém os arquivos utilizados na experimentação sobre a **comparação de desempenho entre diferentes linguagens de programação**, tendo como base a implementação de **arrays dinâmicos** e a execução de benchmarks padronizados.
+Esse repositório contém os arquivos utilizados na experimentação sobre a comparação de desempenho entre diferentes linguagens de programação, tendo como base a implementação de arrays dinâmicos e a execução de benchmarks padronizados.
 
 ## Equipe
 - Camila Gomes dos Santos — 124211420  
@@ -10,19 +10,19 @@ Esse repositório contém os arquivos utilizados na experimentação sobre a **c
 - Raissa Tainá Pordeus Ferreira — 124211908  
 
 ## Resumo
-O projeto consiste em uma **análise comparativa e experimental de desempenho entre diferentes linguagens de programação**, baseada na implementação de arrays dinâmicos.
+O projeto consiste em uma análise comparativa e experimental de desempenho entre diferentes linguagens de programação, baseada na implementação de arrays dinâmicos.
 
-A proposta central não é eleger uma linguagem como superior, mas sim investigar e compreender como as **distintas arquiteturas internas das linguagens**, com diferentes níveis de abstração e modos de execução (compiladas ou interpretadas), impactam a eficiência computacional quando submetidas a **condições idênticas de estresse**.
+A proposta central não é eleger uma linguagem como superior, mas sim investigar e compreender como as distintas arquiteturas internas das linguagens, com diferentes níveis de abstração e modos de execução (compiladas ou interpretadas), impactam a eficiência computacional quando submetidas a condições idênticas de estresse.
 
 A análise será fundamentada nas seguintes métricas:
 
 - tempo de execução das operações fundamentais (inserção, busca e remoção)
 - consumo de memória (Heap e Stack)
 
-Através de testes padronizados com **entradas de diferentes tamanhos e cenários de pior caso**, o trabalho busca interpretar tecnicamente os resultados obtidos e correlacioná-los aos contextos em que cada linguagem se sobressai devido ao seu comportamento interno e paradigma de execução.
+Através de testes padronizados com entradas de diferentes tamanhos e cenários de pior caso, o trabalho busca interpretar tecnicamente os resultados obtidos e correlacioná-los aos contextos em que cada linguagem se sobressai devido ao seu comportamento interno e paradigma de execução.
 
 ## Motivação
-A relevância deste projeto reside na necessidade de compreender como **diferentes arquiteturas de linguagens impactam diretamente o custo computacional em larga escala**.
+A relevância deste projeto reside na necessidade de compreender como diferentes arquiteturas de linguagens impactam diretamente o custo computacional em larga escala.
 
 Em um cenário onde eficiência e velocidade de resposta são cruciais, entender o comportamento de estruturas de dados em diferentes ecossistemas fornece dados úteis para:
 
@@ -32,7 +32,7 @@ Em um cenário onde eficiência e velocidade de resposta são cruciais, entender
 
 ## Metodologia
 
-Com o objetivo de examinar o desempenho de arrays dinâmicos em **tempo de execução e consumo de memória** para diferentes linguagens de programação, o estudo é conduzido por meio de uma abordagem **experimental e comparativa**, cujas etapas principais envolvem:
+Com o objetivo de examinar o desempenho de arrays dinâmicos em tempo de execução e consumo de memória para diferentes linguagens de programação, o estudo é conduzido por meio de uma abordagem experimental e comparativa, cujas etapas principais envolvem:
 
 - implementação da estrutura de dados em cada uma das linguagens analisadas;
 - execução de benchmarks tanto para a estrutura implementada manualmente quanto para estruturas que utilizam recursos nativos das linguagens;
@@ -48,18 +48,18 @@ As linguagens utilizadas no experimento são:
 - Haskell
 - Go
 
-Considerando as diferenças entre essas linguagens, todas as implementações seguem **a mesma lógica estrutural** e são executadas sob **as mesmas condições de teste**, garantindo que a comparação seja feita de forma mais justa.
+Considerando as diferenças entre essas linguagens, todas as implementações seguem a mesma lógica estrutural e são executadas sob as mesmas condições de teste, garantindo que a comparação seja feita de forma mais justa.
 
 ## Geração de Dados de Entrada
 
-As entradas são geradas por meio de um script que utiliza a função `randint` da biblioteca `random` da linguagem Python.
+As entradas são geradas por meio de um script que utiliza a função randint da biblioteca random da linguagem Python.
 
 Características da entrada utilizada nos experimentos:
 
 - 100.000 valores inteiros
-- números aleatórios no intervalo entre **-100.000 e 100.000**
+- números aleatórios no intervalo entre -100.000 e 100.000
 
-Para a realização de testes de **pior caso**, o valor **7** foi removido da sequência gerada. Dessa forma, operações como busca podem ser executadas procurando um elemento inexistente, forçando a estrutura a percorrer todos os elementos.
+Para a realização de testes de pior caso, o valor 7 foi removido da sequência gerada. Dessa forma, operações como busca podem ser executadas procurando um elemento inexistente, forçando a estrutura a percorrer todos os elementos.
 
 ## Distribuição das Linguagens por Integrante
 
@@ -71,7 +71,7 @@ Para a realização de testes de **pior caso**, o valor **7** foi removido da se
 | Natália | Go |
 | Raissa | C++ |
 
-Cada integrante é responsável pela **implementação da estrutura de dados na linguagem atribuída, execução dos benchmarks, análise dos resultados e documentação correspondente**.
+Cada integrante é responsável pela implementação da estrutura de dados na linguagem atribuída, execução dos benchmarks, análise dos resultados e documentação correspondente.
 
 ## Comandos para executar o experimento
 
